@@ -26,7 +26,7 @@ from .utils.util import load_obj
 from perlin_noise import rand_perlin_2d_octaves, rand_perlin_2d
 
 from img_2_tex import *
-from face_view_renderer import save_frontal_and_side_images 
+from face_view_renderer import save_frontal_image 
 
 from .utils import lossfunc
 
@@ -531,17 +531,17 @@ class DECA(nn.Module):
         # 🔹 This section was added to save frontal and side views
         out_dir = os.path.dirname(filename)
         base_name = os.path.splitext(os.path.basename(filename))[0]
+        frontal_path = os.path.join(out_dir, f"{base_name}_frontal.png")
 
         try:
-            frontal_path, left_path, right_path, yaw, roll = save_frontal_and_side_images(
+            frontal_path, yaw, roll = save_frontal_image(
                 filename,   # use the same obj saved above
-                out_dir,
-                side_yaw=30.0   # adjust if needed
+                frontal_path 
             )
-            print(f"✅Saved frontal and side views.")
+            print(f"✅Saved frontal view.")
         except Exception as e:
             print(f"[WARN] Could not generate frontal/side images: {e}")
-        # ======================================================    
+        # ======================================================       
     
     def run(self, imagepath, iscrop=True):
         ''' An api for running deca given an image path
