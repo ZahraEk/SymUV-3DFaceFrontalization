@@ -534,7 +534,7 @@ class DECA(nn.Module):
         frontal_path = os.path.join(out_dir, f"{base_name}_frontal.png")
 
         try:
-            frontal_path, yaw, roll ,pitch = save_frontal_image(
+            frontal_path, yaw, roll = save_frontal_image(
                 filename,   # use the same obj saved above
                 frontal_path 
             )
