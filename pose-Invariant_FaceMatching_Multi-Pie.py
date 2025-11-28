@@ -323,7 +323,7 @@ def process_multipie_pairwise(person_id, deca_out_root, sess, input_name, output
         axes[1][1].imshow(cv2.cvtColor(img_front_ref, cv2.COLOR_BGR2RGB)); axes[1][1].set_title(f"FRONT REF ({ref_folder})"); axes[1][1].axis('off')
       
         # Add similarity text
-        plt.figtext(0.5, 0.01, f"UV: {uv_sim:.4f} | FRONT: {fr_sim:.4f}", ha="center")
+        plt.figtext(0.5, 0.01, f"UV: {uv_sim:.4f} | FRONT: {fr_sim:.4f}", fontsize=14, ha="center")
         plt.tight_layout(rect=[0, 0.03, 1, 1])
         out_dir = os.path.join(vis_dir, "pairwise comparisons")
         os.makedirs(out_dir, exist_ok=True)  
@@ -463,32 +463,32 @@ def process_profile_comparisons(person_id, input_person_folder, deca_out_root,
         })
 
         # 5) Visualization similar to CFP benchmark
-        fig, axes = plt.subplots(1, 4, figsize=(20, 5))
+        fig, axes = plt.subplots(1, 4, figsize=(20, 6))
 
         fig.subplots_adjust(top=2.0, hspace=0.3, wspace=0.15)
 
         # Display frontal input
         axes[0].imshow(cv2.cvtColor(img_frontal, cv2.COLOR_BGR2RGB))
-        axes[0].set_title("Original Frontal", fontsize=16, fontweight="bold")
+        axes[0].set_title("Original Frontal", fontsize=16)
         axes[0].axis("off")
 
         # Display matching profile or a placeholder
         if matching_profile:
             axes[1].imshow(cv2.cvtColor(img_prof, cv2.COLOR_BGR2RGB))
-            axes[1].set_title("Original Profile", fontsize=16, fontweight="bold")
+            axes[1].set_title("Original Profile", fontsize=16)
             axes[1].axis("off")
         else:
-            axes[1].text(0.5, 0.5, "NO PROFILE", fontsize=16, fontweight="bold", ha="center")
+            axes[1].text(0.5, 0.5, "NO PROFILE", fontsize=16, ha="center")
             axes[1].axis("off")
 
         # UV texture image
         axes[2].imshow(cv2.cvtColor(img_uv, cv2.COLOR_BGR2RGB))
-        axes[2].set_title("UV Texture", fontsize=16, fontweight="bold")
+        axes[2].set_title("UV Texture", fontsize=16)
         axes[2].axis("off")
 
         # Frontalized output
         axes[3].imshow(cv2.cvtColor(img_front, cv2.COLOR_BGR2RGB))
-        axes[3].set_title("Frontalized", fontsize=16, fontweight="bold")
+        axes[3].set_title("Frontalized", fontsize=16)
         axes[3].axis("off")
 
         # Display similarity scores under the figure
@@ -732,5 +732,6 @@ if __name__ == "__main__":
     BASE_INPUT_OUT = args.in_data
     DECA_OUT_ROOT = args.deca_out
     ONNX_MODEL_LOCAL = args.onnx
+
 
     pipeline(MULTIPIE_ROOT, BASE_INPUT_OUT, DECA_OUT_ROOT, VIS_ROOT, CSV_OUT, ONNX_MODEL_LOCAL)
