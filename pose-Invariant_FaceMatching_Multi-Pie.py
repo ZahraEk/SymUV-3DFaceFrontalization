@@ -38,7 +38,7 @@ except Exception:
 MULTIPIE_ROOT = "Multi_Pie/HR_128"              # Multi-PIE dataset folder
 BASE_INPUT_OUT = "inference_test/in_data"      # copied inputs go here (per-person subfolder)
 DECA_OUT_ROOT = "inference_test/out_data"      # expected deca outputs here (per-person subfolder)
-VIS_ROOT = os.path.join(DECA_OUT_ROOT, "vis_multi_pie")
+VIS_ROOT = os.path.join(DECA_OUT_ROOT, "vis_multipie")
 CSV_OUT = os.path.join(DECA_OUT_ROOT, "csv", "multipie_results.csv")
 ONNX_MODEL_URL = "https://huggingface.co/onnxmodelzoo/arcfaceresnet100-11-int8/resolve/main/arcfaceresnet100-11-int8.onnx"
 ONNX_MODEL_LOCAL = "arcfaceresnet100-int8.onnx"
@@ -743,3 +743,4 @@ if __name__ == "__main__":
 
 
     pipeline(MULTIPIE_ROOT, BASE_INPUT_OUT, DECA_OUT_ROOT, VIS_ROOT, CSV_OUT, ONNX_MODEL_LOCAL)
+
