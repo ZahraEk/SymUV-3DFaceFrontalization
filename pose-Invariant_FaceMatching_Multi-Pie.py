@@ -26,6 +26,7 @@ import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+from skimage.metrics import structural_similarity as ssim
 
 # try to import run_deca_inference if you have it in a module deca_infer.py
 try:
@@ -107,6 +108,22 @@ def cosine_sim(a, b):
     b = np.asarray(b, dtype=np.float64)
     denom = (np.linalg.norm(a) * np.linalg.norm(b) + 1e-8)
     return float(np.dot(a, b) / denom)
+
+def compute_psnr(img1, img2):
+    """Compute PSNR between two BGR images"""
+    if img1 is None or img2 is None:
+        return float("nan")
+    return cv2.PSNR(img1, img2)
+
+def compute_ssim(img1, img2):
+    """Compute SSIM between two BGR images"""
+    if img1 is None or img2 is None:
+        return float("nan")
+    # convert to grayscale 
+    g1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
+    g2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
+    s, _ = ssim(g1, g2, full=True)
+    return float(s)
 
 # -------------------- Random Multi-PIE subject selection --------------------
 def select_random_subject_and_copy(dataset_path=MULTIPIE_ROOT, base_output_path=BASE_INPUT_OUT):
@@ -279,7 +296,7 @@ def process_multipie_pairwise(person_id, deca_out_root, sess, input_name, output
     # Compute embeddings for the reference UV / frontal images
     emb_uv_ref = compute_embedding_onnx(sess, input_name, output_name, img_uv_ref) if img_uv_ref is not None else None
     emb_front_ref = compute_embedding_onnx(sess, input_name, output_name, img_front_ref) if img_front_ref is not None else None
-
+  
     print(f"[INFO] Reference folder: {ref_folder}")
     print(f"       UV_REF: {uv_ref}")
     print(f"       FRONT_REF: {front_ref}\n")
@@ -311,8 +328,13 @@ def process_multipie_pairwise(person_id, deca_out_root, sess, input_name, output
         # Compute similarity vs the reference folder
         uv_sim = cosine_sim(emb_uv_ref, emb_uv) if emb_uv_ref is not None else float('nan')
         fr_sim = cosine_sim(emb_front_ref, emb_fr) if emb_front_ref is not None else float('nan')
-
-        print(f"[PAIR] {f} vs REF : UV sim: {uv_sim:.4f} | Front sim: {fr_sim:.4f}")
+       
+        # ----- PSNR & SSIM between UV(angle) and UV(REF) -----
+        psnr_uv = compute_psnr(img_uv, img_uv_ref)
+        ssim_uv = compute_ssim(img_uv, img_uv_ref)  
+       
+        print(f"[PAIR] {f} vs REF : Front sim: {fr_sim:.4f} | UV sim: {uv_sim:.4f} | "
+              f"PSNR UV: {psnr_uv:.2f} | SSIM UV: {ssim_uv:.4f}")
 
         # -------- Visualization for this angle vs reference --------
         out_path = os.path.join(vis_dir, "pairwise comparisons", f"{f}_vs_REF.png")
@@ -323,7 +345,9 @@ def process_multipie_pairwise(person_id, deca_out_root, sess, input_name, output
         axes[1][1].imshow(cv2.cvtColor(img_front_ref, cv2.COLOR_BGR2RGB)); axes[1][1].set_title(f"FRONT REF ({ref_folder})"); axes[1][1].axis('off')
       
         # Add similarity text
-        plt.figtext(0.5, 0.01, f"UV: {uv_sim:.4f} | FRONT: {fr_sim:.4f}", fontsize=14, ha="center")
+        plt.figtext(0.5, 0.01, f"FRONT: {fr_sim:.4f} | UV: {uv_sim:.4f} | PSNR(UV): {psnr_uv:.2f} | SSIM(UV): {ssim_uv:.4f}",
+        fontsize=12, ha="center")
+
         plt.tight_layout(rect=[0, 0.03, 1, 1])
         out_dir = os.path.join(vis_dir, "pairwise comparisons")
         os.makedirs(out_dir, exist_ok=True)  
@@ -336,8 +360,10 @@ def process_multipie_pairwise(person_id, deca_out_root, sess, input_name, output
             "person": person_id,
             "entry": f,
             "reference": ref_folder,
+            "front_similarity": fr_sim,
             "uv_similarity": uv_sim,
-            "front_similarity": fr_sim
+            "psnr_uv": psnr_uv,
+            "ssim_uv": ssim_uv
         })
 
     return pair_rows
@@ -662,7 +688,7 @@ def pipeline(multipie_root=MULTIPIE_ROOT, base_input_out=BASE_INPUT_OUT,
         print("[INFO] DECA output folder not found for person -> skipping deca output comparisons:", deca_person_folder)
 
     # 7) Multi-PIE: run CFP-style profile comparisons for the selected person
-    print("\n[INFO] Running Multi-PIE Profile Comparisons evaluation...")
+    print("\n[INFO] Calculating similarities and generating visualizations...")
     cfp_csv = os.path.join(DECA_OUT_ROOT, "csv", "multipie_comparisons.csv")
     process_profile_comparisons(
         person_id,
@@ -674,7 +700,7 @@ def pipeline(multipie_root=MULTIPIE_ROOT, base_input_out=BASE_INPUT_OUT,
     )
 
     # 8) Multi-PIE: pairwise evaluation (every angle folder vs 051_frontal)
-    print("\n[INFO] Running Multi-PIE pairwise UV/Front comparison...")
+    print("\n[INFO] Running pairwise UV/Front comparison...")
     pair_rows = process_multipie_pairwise(
         person_id, deca_out_root, sess, input_name, output_name, vis_root
     )
@@ -683,38 +709,20 @@ def pipeline(multipie_root=MULTIPIE_ROOT, base_input_out=BASE_INPUT_OUT,
     pair_csv = os.path.join(deca_out_root, "csv", "multipie_pairwise.csv")
     os.makedirs(os.path.dirname(pair_csv), exist_ok=True)
     with open(pair_csv, "w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=["person", "entry", "reference", "uv_similarity", "front_similarity"])
+        writer = csv.DictWriter(f, fieldnames=["person", "entry", "reference", "front_similarity", "uv_similarity", "psnr_uv", "ssim_uv"])
         writer.writeheader()
         for r in pair_rows:
             writer.writerow(r)
 
     print("[INFO] Pairwise CSV saved:", pair_csv)
 
-    # 9) Final combined CSV of (inputs + DECA)
-    os.makedirs(os.path.dirname(csv_out) or ".", exist_ok=True)
-    with open(csv_out, "a", newline="", encoding="utf-8") as f:
-        fieldnames = ["person", "type", "file", "reference", "similarity"]
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
-
-        # Write header only for new file
-        if os.stat(csv_out).st_size == 0:
-            writer.writeheader()
-
-        for row in sim_rows:
-            writer.writerow(row)
-
-    print("[INFO] CSV updated ->", csv_out)
-
-    # 10) Create a visual comparison of all input images vs reference
+    # 9) Create a visual comparison of all input images vs reference
     vis_person_dir = os.path.join(vis_root, person_id)
     os.makedirs(vis_person_dir, exist_ok=True)
 
     save_comparison_vis(
         vis_person_dir, person_id, ref_input_path, input_images, sims_for_vis
     )
-
-    # Per-person extra CSV (not required but helpful)
-    per_person_csv = os.path.join(deca_out_root, "csv", f"{person_id}_multipie_profile_comparison.csv")
 
     print("[✅] Pipeline finished for person:", person_id)
     return True
