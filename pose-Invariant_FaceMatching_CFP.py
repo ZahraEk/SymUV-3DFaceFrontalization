@@ -31,9 +31,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from skimage.metrics import structural_similarity as ssim
 
-# --------------------------------------------------------
-#               CFP RANDOM PAIR EXTRACTOR
-# --------------------------------------------------------
+# CFP RANDOM PAIR EXTRACTOR
 def extract_random_cfp_pairs(dataset_path, output_path, num_persons=5):
     """
     Select N random persons from CFP dataset and copy:
@@ -90,9 +88,7 @@ def extract_random_cfp_pairs(dataset_path, output_path, num_persons=5):
     print(f"\n[OK] {len(copied)} persons copied to {output_path}")
     return copied
 
-# --------------------------------------------------------
-#                DECA INFERENCE (INTERNAL)
-# --------------------------------------------------------
+# DECA INFERENCE (INTERNAL)
 try:
     from deca_infer import run_deca_inference
 except ImportError:
@@ -101,7 +97,7 @@ except ImportError:
     # don't sys.exit here; allow user to skip DECA if desired
 
 
-# -------------------- ArcFace ONNX utilities --------------------
+# ArcFace ONNX utilities 
 ONNX_MODEL_URL = "https://huggingface.co/onnxmodelzoo/arcfaceresnet100-11-int8/resolve/main/arcfaceresnet100-11-int8.onnx"
 ONNX_MODEL_LOCAL = "arcfaceresnet100-int8.onnx"
 ONNX_MODEL_ARG = ONNX_MODEL_LOCAL
@@ -465,7 +461,7 @@ def process_pairwise(groups, deca_out, pair_vis_root, sess, input_name, output_n
             uv_sim = cosine_sim(emb_uv_A, emb_uv_B)
             front_sim = cosine_sim(emb_front_A, emb_front_B)
 
-            # ----- PSNR & SSIM between UV(angle) and UV(REF) -----
+            # PSNR & SSIM between UV(angle) and UV(REF) 
             psnr_uv = compute_psnr(img_uv_A, img_uv_B)
             ssim_uv = compute_ssim(img_uv_A, img_uv_B)  
 
@@ -480,8 +476,7 @@ def process_pairwise(groups, deca_out, pair_vis_root, sess, input_name, output_n
                 "psnr_uv": psnr_uv,
                 "ssim_uv": ssim_uv
             })
-
-            print("[INFO] Running pairwise UV/Front comparison...")
+           
             print(f"[PAIR] {A} vs {B} : Front sim: {front_sim:.4f} | UV sim: {uv_sim:.4f} | "
                   f"PSNR UV: {psnr_uv:.2f} | SSIM UV: {ssim_uv:.4f}")
 
@@ -563,22 +558,6 @@ def create_contact_sheet_for_pair(deca_out_root, out_path, thumb_w=360, thumb_h=
                 imgs.append(np.ones((thumb_h, thumb_w, 3), dtype=np.uint8)*255)
         imgs_rows.append(imgs)
 
-    # Combine into a 2x3 contact sheet
-    sheet_h = thumb_h * 2
-    sheet_w = thumb_w * 3
-    sheet = np.ones((sheet_h, sheet_w, 3), dtype=np.uint8) * 255
-
-    for r, row_imgs in enumerate(imgs_rows):
-        for c, im in enumerate(row_imgs):
-            y = r * thumb_h
-            x = c * thumb_w
-            sheet[y:y+thumb_h, x:x+thumb_w] = im
-
-    # Save
-    sheet_bgr = cv2.cvtColor(sheet, cv2.COLOR_RGB2BGR)
-    cv2.imwrite(out_path, sheet_bgr)
-    print(f"[INFO] Contact sheet saved -> {out_path}")
-
 # main (CLI + orchestration)
 def main():
     parser = argparse.ArgumentParser(description="Run DECA then compute similarity, visualizations, CSV using ArcFace ONNX (with pairwise comparisons).")
@@ -631,10 +610,13 @@ def main():
             print("[WARNING] No persons detected in deca_out; nothing to process.")
             return
 
-    # Check model
+    # Load or download ArcFace ONNX model
     if not os.path.exists(args.model_path):
-        print(f"[ERROR] ONNX model not found at: {args.model_path}")
-        return
+        try:
+            download_arcface()  # try downloading if not present
+        except Exception as e:
+            print(f"[ERROR] Could not download ONNX model: {e}")
+            return
 
     # ONNX session
     sess, input_name, output_name = get_onnx_session(args.model_path)
@@ -651,6 +633,7 @@ def main():
     groups = group_by_base(persons)
     pair_vis_root = os.path.join(args.output_vis, "pairs")
     os.makedirs(pair_vis_root, exist_ok=True)
+    print("[INFO] Running pairwise UV/Front comparison...")
     pair_rows = process_pairwise(groups, args.deca_out, pair_vis_root, sess, input_name, output_name)
     pair_csv_path = os.path.join(args.deca_out, "csv/cfp_pairwise.csv")
     write_and_sort_pair_csv(pair_rows, pair_csv_path, sort_by="front_similarity", descending=True)
@@ -674,7 +657,8 @@ def main():
         except Exception as e:
             print(f"[ERROR] Failed to sort original CSV: {e}")
 
-    print("\n[✅] Pipeline finished")
+    print("[✅] Pipeline finished")
 
 if __name__ == "__main__":
+
     main()
