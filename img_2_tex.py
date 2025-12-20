@@ -3,6 +3,7 @@
 import os
 import torchvision
 import torch
+import imageio
 from tqdm import tqdm
 import math
 import numpy as np
@@ -70,6 +71,7 @@ def remove_specular_highlights(uv_np):
     # Smooth the bright regions
     uv_np_clean = cv2.inpaint(uv_np, mask, 5, cv2.INPAINT_TELEA)
     return uv_np_clean
+    
 def apply_face_neck_correction(uv_texture_np, mask_path, blend_ratio=0.5):
     """
     Applies color correction (matching) from the face area (white in mask) 
@@ -191,7 +193,6 @@ def central_merge_nose(img, blend_width=256, center_half=40, bias_left=0.65, nos
 
     return out
 
-
 def central_merge_fullheight(img, blend_width=256, center_half=40, bias_left=0.65):
     """
     Full-height symmetric merge with a central blurred fill region.
@@ -247,7 +248,55 @@ def central_merge_fullheight(img, blend_width=256, center_half=40, bias_left=0.6
 
     blended = np.clip(blended, 0, 255).astype(np.uint8)
     return blended
+    
+def inpaint_nasal_region_uv(img, face_mask):
+    """
+    Inpaint nasal region of UV texture using OpenCV.
+    Returns tensor with prefilled pixels.
+    """
+    # Ensure uint8
+    uv = (img * 255).astype(np.uint8) if img.dtype == np.float32 else img.copy()
+    mask = (face_mask * 255).astype(np.uint8) if face_mask.dtype == np.float32 else face_mask.copy()
 
+    # HSV-based rough defect detection
+    hsv = cv2.cvtColor(uv, cv2.COLOR_RGB2HSV)
+    H, S, V = cv2.split(hsv)
+    mask_hsv = ((V < 80) | (V > 250) | (S < 80)).astype(np.uint8)
+
+    # Local high-variance regions
+    blur = cv2.GaussianBlur(uv, (5,5), 0)
+    diff = np.abs(uv.astype(np.float32) - blur.astype(np.float32))
+    diff_gray = np.mean(diff, axis=2)
+    thr = np.percentile(diff_gray, 99)
+    mask_local = ((diff_gray > thr) & (S < 120)).astype(np.uint8)
+
+    # Combine masks
+    defect_mask = cv2.bitwise_or(mask_hsv, mask_local)
+    defect_mask = cv2.bitwise_and(defect_mask, mask)
+
+    # Narrow band along nose
+    h, w = defect_mask.shape
+    cx = w // 2
+    bw = int(w * 0.1)
+    band = np.zeros_like(defect_mask)
+    band[:, cx-bw:cx+bw] = 1
+    defect_mask = cv2.bitwise_and(defect_mask, band)
+
+    # Morphological closing
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(9,9))
+    defect_mask = cv2.morphologyEx(defect_mask, cv2.MORPH_CLOSE, kernel)
+
+    # If no defect, return original
+    if defect_mask.sum() < 50:
+        return uv
+
+    # Inpainting
+    uv_bgr = cv2.cvtColor(uv, cv2.COLOR_RGB2BGR)
+    inpainted = cv2.inpaint(uv_bgr, (defect_mask*255).astype(np.uint8), 3, cv2.INPAINT_NS)
+    uv_rgb = cv2.cvtColor(inpainted, cv2.COLOR_BGR2RGB)
+
+    return uv_rgb
+    
 def tex_correction(uv_texture, angle,
                    mask_color_correction="/content/Towards-Realistic-Generative-3D-Face-Models/data/modified_uv_face_eye_mask.png",
                    mask_inpaint_nasal="/content/Towards-Realistic-Generative-3D-Face-Models/data/uv_face_neck_mask.png",
@@ -335,7 +384,13 @@ def tex_correction(uv_texture, angle,
         blended = np.power(blended / 255.0, 1.0 / gamma)
         blended = np.clip(blended * 255, 0, 255).astype(np.uint8)
 
-    #blended = central_merge_nose(blended, blend_width=120, center_half=40, bias_left=0.50, nose_y_range=(0.20, 0.80))
+    # Nasal inpainting
+    #mask_nasal = imageio.imread(mask_inpaint_nasal)
+    #if mask_nasal.ndim == 3:
+    #    mask_nasal = mask_nasal[:,:,0]
+
+    #blended = inpaint_nasal_region_uv(blended, mask_nasal)
+    #blended = central_merge_nose(blended, blend_width=80, center_half=40, bias_left=0.50, nose_y_range=(0.20, 0.80))
     #blended = central_merge_fullheight(blended, blend_width=512, center_half=24, bias_left=0.99)
 
     # Return the corrected texture as a torch tensor.
