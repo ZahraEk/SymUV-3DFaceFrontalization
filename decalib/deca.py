@@ -370,7 +370,7 @@ class DECA(nn.Module):
 
             uv_detail_normals = self.displacement2normal(uv_z, verts, ops['normals'])
             uv_shading = self.render.add_SHlight(uv_detail_normals, codedict['light'])
-            uv_shading = torch.clamp(uv_shading, 0.0, 1.0)  # 🔹 جلوگیری از نویز سبز
+            uv_shading = torch.clamp(uv_shading, 0.0, 1.0) # Prevent green noise
             albedo = torchvision.transforms.Resize(uv_shading.shape[3])(albedo)
             albedo = torch.clamp(albedo, 0.0, 1.0)
             uv_texture = torch.clamp(albedo * uv_shading, 0.0, 1.0)
@@ -398,7 +398,7 @@ class DECA(nn.Module):
             uv_gt = F.grid_sample(images, uv_pverts_2.permute(0,2,3,1)[:,:,:,:2], mode='bilinear', align_corners=False)
             background = images
 
-            # حذف نویز پرلین و clamp رنگ‌ها
+            # Perlin noise removal and color clamp
             mask_face = torchvision.transforms.Resize(rend_size)(self.uv_face_eye_mask)
             uv_gt_resized = torchvision.transforms.Resize(rend_size)(uv_gt[:,:3,:,:])
             uv_tex_clean = torch.clamp(torchvision.transforms.Resize(rend_size)(uv_texture)[:,:3,:,:], 0.0, 1.0)
@@ -410,7 +410,7 @@ class DECA(nn.Module):
             angle2 = mesh_angle(verts[0].detach().cpu().numpy(), [3572,723,3555])
             avg_ang = int((angle1+angle2)/2)
             avg_ang = 90-(360-avg_ang)
-            print(f"\n{'-'*40}\n{name}: 📐avg_angle = {avg_ang}°")
+            #print(f"\n{'-'*40}\n{name}: 📐avg_angle = {avg_ang}°")
 
             correct_tex, orig_tex = tex_correction(uv_texture_gt[0].permute(1,2,0).detach().cpu(), avg_ang)
             correct_tex = torch.clamp(correct_tex, 0.0, 1.0)
@@ -423,7 +423,6 @@ class DECA(nn.Module):
             self.create_sh_video = 0
 
             if self.create_sh_video:
-                # (بخش ویدیو بدون تغییر)
                 pass
             else:
                 size = (1024,1024)
