@@ -133,7 +133,7 @@ def save_frontal_image(mesh_path, frontal_path):
     img = render_rgb(mesh, center, radius, yaw, roll_deg=roll, out_size=IMG_SIZE_DEFAULT)
     os.makedirs(os.path.dirname(frontal_path), exist_ok=True)
     cv2.imwrite(frontal_path, img)
-    print(f"Best pose -> yaw: {yaw:.2f}, roll: {roll:.2f}")
+    #print(f"Best pose -> yaw: {yaw:.2f}, roll: {roll:.2f}")
     return frontal_path, yaw, roll
 
 def save_rotation_gif(mesh_path, out_gif, n_frames=30, fps=15, delta_yaw=45.0):
@@ -208,3 +208,4 @@ if __name__ == "__main__":
         args.mesh, gif_path, n_frames=args.n_frames, fps=args.fps, delta_yaw=args.delta_yaw
     )
     print("=== Rendering finished ===")
+
