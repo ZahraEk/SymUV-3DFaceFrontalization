@@ -537,7 +537,7 @@ class DECA(nn.Module):
                 filename,   # use the same obj saved above
                 frontal_path 
             )
-            print(f"✅Saved frontal view.")
+            #print(f"✅Saved frontal view.")
         except Exception as e:
             print(f"[WARN] Could not generate frontal/side images: {e}")
         # ======================================================       
