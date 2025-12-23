@@ -84,6 +84,7 @@ def train_single_uv(img_name, input_dir, out_dir="results", iters=500, uv_size=5
     # Damage mask inferred via symmetry difference
     mask_z = compute_mask_z(uv_raw, healthy_side, mask_threshold=30)
     mask_z = mask_z.to(face_mask.device) * face_mask
+    #mask_z = add_seam_band(mask_z, band_width=80, falloff=20)
     mask_z = mask_z * face_mask
 
     # Softened version for smoother blending
@@ -92,7 +93,7 @@ def train_single_uv(img_name, input_dir, out_dir="results", iters=500, uv_size=5
     # Mask of preserved (healthy) UV region
     mask_uv = torch.clamp(face_mask - mask_z, 0, 1)
 
-    # Save mask 
+    # Save masks 
     Image.fromarray((mask_z[0,0].cpu().numpy()*255).astype(np.uint8)) \
         .save(os.path.join(out_dir, f"mask_z_{base}.png"))
 
@@ -107,9 +108,12 @@ def train_single_uv(img_name, input_dir, out_dir="results", iters=500, uv_size=5
     # Save split halves for sanity check
     x_uv_img = (x_uv_raw[0].permute(1,2,0).cpu().numpy() * 0.5 + 0.5)  # [-1,1] -> [0,1]
     x_z_img = (x_z_raw[0].permute(1,2,0).cpu().numpy() * 0.5 + 0.5)
+    uv_flip_img = uv_flip[0].permute(1,2,0).cpu().numpy()
+
     Image.fromarray((x_uv_img*255).astype(np.uint8)).save(os.path.join(out_dir, f"x_uv_{base}.png"))
     Image.fromarray((x_z_img*255).astype(np.uint8)).save(os.path.join(out_dir, f"x_z_{base}.png"))
-
+    Image.fromarray((uv_flip_img*255).astype(np.uint8)).save(os.path.join(out_dir, f"uv_flip_{base}.png"))
+    
     # ================= Models =================
     G = Generator(in_ch=7, base=64).to(device)
 
@@ -136,13 +140,11 @@ def train_single_uv(img_name, input_dir, out_dir="results", iters=500, uv_size=5
     # ================= Loss Weights =================
     WEIGHT_ADV_UV = 0.005
     WEIGHT_RENDER_ADV = 0.01       
-    WEIGHT_RENDER_L1 = 1.0
+    WEIGHT_RENDER_REC = 1.0
     WEIGHT_RENDER_VGG = 0.2
     WEIGHT_RENDER_ID = 0.05
-    WEIGHT_GRAD_SYM = 1.5
     WEIGHT_SYM = 2.0
     WEIGHT_SEAM = 1.0
-    WEIGHT_TV = 0.001
     WARMUP = 50
 
     # ================= Training Loop =================
@@ -172,6 +174,7 @@ def train_single_uv(img_name, input_dir, out_dir="results", iters=500, uv_size=5
         # ---------- Render-space losses ----------
         L_render_L1 = (torch.abs(render_img - img_gt) * face_mask_img).sum() / (face_mask_img.sum()+1e-8)
         L_render_VGG = L_VGG(render_img*face_mask_img, img_gt*face_mask_img)
+        L_render_rec = L_render_L1 + WEIGHT_RENDER_VGG * L_render_VGG
         L_render_ID = L_ID(render_img*face_mask_img, img_gt*face_mask_img)
 
         # ---------- Image GAN (Generator) ----------
@@ -189,14 +192,10 @@ def train_single_uv(img_name, input_dir, out_dir="results", iters=500, uv_size=5
         L_rec = L_rec_uv + lambda_z * L_rec_z 
 
         # Extract damaged half output
-        if healthy_side == "left":
-            x_z_out = out[:,:,:,mid:]
-        else:
-            x_z_out = out[:,:,:,:mid]
+        x_z_out = out[:, :, :, mid:] if healthy_side == "left" else out[:, :, :, :mid]
 
-        # Symmetry & gradient consistency
+        # Symmetry loss
         L_sym = L1(x_z_out, torch.flip(x_uv_raw, dims=[3]))
-        L_grad_sym = gradient_symmetry_loss(out, uv_raw_norm, mask_z, mid, healthy_side)
 
         # UV adversarial loss
         d_fake_g, _ = D_uv(x_z_out)
@@ -207,22 +206,16 @@ def train_single_uv(img_name, input_dir, out_dir="results", iters=500, uv_size=5
         #L_seam = (torch.abs(final_uv - uv_target_norm) * seam_w).sum() / (seam_w.sum() + 1e-8)
         L_seam = (torch.abs(final_uv - uv_raw_norm) * seam_w * mask_z).sum() / (seam_w.sum() + 1e-8)
 
-        # Total variation regularization
-        L_tv = total_variation_loss(out * mask_z)
-
         # ---------- Total Generator Loss ----------
         L_g = (
             #L_rec
             L_rec_uv
             + WEIGHT_ADV_UV * L_adv_uv
             + WEIGHT_RENDER_ADV * L_adv_img  
-            + WEIGHT_RENDER_L1 * L_render_L1
-            + WEIGHT_RENDER_VGG * L_render_VGG
+            + WEIGHT_RENDER_REC * L_render_rec
             + WEIGHT_RENDER_ID * L_render_ID
-            + WEIGHT_GRAD_SYM  * L_grad_sym
             + WEIGHT_SYM * L_sym
             + WEIGHT_SEAM * L_seam
-            + WEIGHT_TV * L_tv
         )
 
         L_g.backward()
@@ -249,35 +242,42 @@ def train_single_uv(img_name, input_dir, out_dir="results", iters=500, uv_size=5
         # ---------- Logging  ----------
         final_scaled = (final_uv + 1) / 2
         if i % 50 == 0 or i == iters - 1:
-            print(f"\n[{i}/{iters}]: L_rec_uv={L_rec_uv:.4f}, L_adv_uv={L_adv_uv:.4f}, L_adv_img ={L_adv_img :.4f}\n"
-                  f"L_render_L1={L_render_L1:.4f}, L_render_VGG={L_render_VGG:.4f}, L_render_ID={L_render_ID:.4f}\n"
-                  f"L_sym={L_sym:.4f}, L_grad_sym={L_grad_sym:.4f}, L_seam={L_seam:.4f}, L_tv={L_tv:.4f}\n")
+            print(f"\n[{i}/{iters}]: L_g={L_g:.4f}, L_rec_uv={L_rec_uv:.4f}, L_adv_uv={L_adv_uv:.4f}, L_adv_img ={L_adv_img :.4f}\n"
+                  f"L_render_rec={L_render_rec:.4f}, L_render_ID={L_render_ID:.4f}, L_sym={L_sym:.4f}, L_seam={L_seam:.4f}\n")
 
             save = final_scaled[0].cpu().clamp(0,1)
             pil = transforms.ToPILImage()(save)
             pil.save(os.path.join(out_dir,f"iter_{i:4d}_{base}.png"))
 
-            # --- Final save ---
-            final_img = (final_uv+1)/2
-            final_img = final_img[0].permute(1,2,0).detach().cpu().clamp(0,1).numpy()
-            final_img = (final_img*255).astype(np.uint8)
-            save_path = os.path.join(out_dir,f"uv_complete_{base}.png")
-            Image.fromarray(final_img).save(save_path)
-    print(f"✅Saved Completed UV: {save_path}")
+        # --- Final save ---
+        final_img = final_scaled[0].permute(1,2,0).detach().cpu().clamp(0,1).numpy()
+        final_img = (final_img*255).astype(np.uint8)
+        save_path = os.path.join(out_dir,f"uv_complete_{base}.png")
+        Image.fromarray(final_img).save(save_path)
+       
+        # ================= Save Final OBJ + Frontal Render =================
+        with torch.no_grad():
+          # encode 
+          enc_input = transforms.Resize(224)(img_cropped)
+          codedict = deca.encode(enc_input)
+          codedict['images'] = img_cropped
 
-    # ================= Save Final OBJ + Frontal Render =================
-    final_uv = (final_uv + 1) / 2
-    final_uv = torch.nn.functional.interpolate(final_uv, (1024,1024), mode="bicubic", align_corners=False)
+          # decode 
+          opdict, visdict = deca.decode(codedict, name=base)
 
-    with torch.no_grad():
-        codedict = deca.encode(transforms.Resize(224)(img_cropped))
-        codedict['images'] = img_cropped
-        codedict['uv_texture_gt'] = final_uv
-        opdict, _ = deca.decode(codedict, name=base)
-        obj_path = os.path.join(out_dir, f"{base}.obj")
-        deca.save_obj(obj_path, opdict, codedict)
-        print(f"✅Saved OBJ + frontal render: {obj_path}")
+          # UV (only upscale if needed)
+          _, _, h, w = final_scaled.shape
+          if h != 1024 or w != 1024:
+             final_scaled = torch.nn.functional.interpolate(final_scaled, (1024,1024), mode="bicubic", align_corners=False)
+          opdict['uv_texture_gt'] = final_scaled
 
+          obj_path = os.path.join(out_dir, f"{base}.obj")
+          deca.save_obj(obj_path, opdict, codedict)
+
+    # ======= Final Print =======
+    print(f"\n✅[TRAINING COMPLETE] UV completion for '{base}' finished.")
+    print(f"✅All outputs (UVs, masks, final images, OBJ) are saved in: '{out_dir}'\n")
+    
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--input_dir", required=True)
