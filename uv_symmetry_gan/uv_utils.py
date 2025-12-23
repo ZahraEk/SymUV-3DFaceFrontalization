@@ -46,7 +46,26 @@ def compute_mask_z(uv_img_tensor, healthy_side="left", mask_threshold=30):
     mask_tensor = torch.tensor(full_mask, dtype=torch.float32).unsqueeze(0).unsqueeze(0)/255.0
     mask_tensor = torch.nn.functional.interpolate(mask_tensor, size=(uv_img_tensor.shape[2], uv_img_tensor.shape[3]), mode='nearest')
     return mask_tensor
+    
+def add_seam_band(mask_z, band_width=80, falloff=20):
+    """
+    mask_z: [1,1,H,W]
+    """
+    B,_,H,W = mask_z.shape
+    mid = W // 2
 
+    band = torch.zeros_like(mask_z)
+
+    for i in range(-band_width//2, band_width//2):
+        x = mid + i
+        if x < 0 or x >= W:
+            continue
+        dist = abs(i)
+        w = 1.0 if dist <= falloff else max(0.0, 1 - (dist-falloff)/(band_width/2-falloff))
+        band[:,:,:,x] = w
+
+    return torch.clamp(mask_z + band, 0, 1)
+    
 # ---------------- Inpainting ----------------
 def inpaint_nasal_region_uv_tensor(uv_tensor, face_mask_tensor):
     """
