@@ -40,7 +40,7 @@ def train_single_uv(img_name, input_dir, out_dir="results", iters=500, uv_size=5
     base = os.path.splitext(os.path.basename(img_name))[0]
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    # ================= DECA: 3D Face Reconstruction & UV Unwrapping =================
+    # =============== DECA: 3D Face Reconstruction & UV Unwrapping ===============
     deca = setup_deca(device)
     img_cropped, arcface_inp, _ = load_deca_cropped(img_name, input_dir, device=device, use_mica=True)
 
@@ -248,20 +248,20 @@ def train_single_uv(img_name, input_dir, out_dir="results", iters=500, uv_size=5
             pil = transforms.ToPILImage()(save)
             pil.save(os.path.join(out_dir,f"iter_{i:4d}_{base}.png"))
 
-        # --- Save completed UV ---
+        # ---------- Save completed UV ----------
         final_img = final_scaled[0].permute(1,2,0).detach().cpu().clamp(0,1).numpy()
         final_img = (final_img*255).astype(np.uint8)
         raw_uv_path = os.path.join(out_dir, f"uv_complete_{base}.png")
         Image.fromarray(final_img).save(raw_uv_path)
 
-        # --- Post-Processing: Face-Neck Correction ---
+        # ---------- Post-Processing: Face-Neck Correction ----------
         FACE_NECK_MASK_PATH = "/content/Towards-Realistic-Generative-3D-Face-Models/data/uv_face_neck_mask.png"  
         corrected_uv = apply_face_neck_correction(uv_texture_np=final_img, mask_path=FACE_NECK_MASK_PATH, blend_ratio=0.4)
 
         corrected_path = os.path.join(out_dir, f"uv_complete_corrected_{base}.png")
         Image.fromarray(corrected_uv).save(corrected_path)
 
-        # --- Post-Processing: Auto-Gamma ---
+        # ---------- Post-Processing: Auto-Gamma ----------
         uv_post = corrected_uv.copy()
         if auto_gamma:
            hsv = cv2.cvtColor(uv_post, cv2.COLOR_RGB2HSV)
@@ -293,7 +293,7 @@ def train_single_uv(img_name, input_dir, out_dir="results", iters=500, uv_size=5
           obj_path = os.path.join(out_dir, f"{base}.obj")
           deca.save_obj(obj_path, opdict, codedict)
 
-    # ======= Final Print =======
+    # ================= Final Print =================
     print(f"\n✅[TRAINING COMPLETE] UV completion for '{base}' finished.")
     print(f"✅All outputs (UVs, masks, final images, OBJ) are saved in: '{out_dir}'\n")
     
