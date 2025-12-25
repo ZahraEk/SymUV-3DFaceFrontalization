@@ -84,7 +84,7 @@ def train_single_uv(img_name, input_dir, out_dir="results", iters=500, uv_size=5
     mid = W // 2
 
     # Damage mask inferred via symmetry difference
-    mask_z = compute_mask_z(uv_raw, healthy_side, mask_threshold=10)
+    mask_z = compute_mask_z(uv_raw, healthy_side, mask_threshold=15)
     mask_z = mask_z.to(face_mask.device) * face_mask
     #mask_z = add_seam_band(mask_z, band_width=80, falloff=20)
     mask_z = mask_z * face_mask
@@ -140,11 +140,11 @@ def train_single_uv(img_name, input_dir, out_dir="results", iters=500, uv_size=5
     codedict['images'] = img_cropped
 
     # ================= Loss Weights =================
-    WEIGHT_ADV_UV = 0.005
+    WEIGHT_ADV_UV = 0.008
     WEIGHT_RENDER_ADV = 0.01       
     WEIGHT_RENDER_REC = 1.0
-    WEIGHT_RENDER_VGG = 0.2
-    WEIGHT_RENDER_ID = 0.05
+    WEIGHT_RENDER_VGG = 0.5
+    WEIGHT_RENDER_ID = 0.08
     WEIGHT_SYM = 2.0
     WEIGHT_SEAM = 1.0
     WARMUP = 50
@@ -248,50 +248,50 @@ def train_single_uv(img_name, input_dir, out_dir="results", iters=500, uv_size=5
             pil = transforms.ToPILImage()(save)
             pil.save(os.path.join(out_dir,f"iter_{i:4d}_{base}.png"))
 
-        # ---------- Save completed UV ----------
-        final_img = final_scaled[0].permute(1,2,0).detach().cpu().clamp(0,1).numpy()
-        final_img = (final_img*255).astype(np.uint8)
-        raw_uv_path = os.path.join(out_dir, f"uv_complete_{base}.png")
-        Image.fromarray(final_img).save(raw_uv_path)
+    # ---------- Save completed UV ----------
+    final_img = final_scaled[0].permute(1,2,0).detach().cpu().clamp(0,1).numpy()
+    final_img = (final_img*255).astype(np.uint8)
+    raw_uv_path = os.path.join(out_dir, f"uv_complete_{base}.png")
+    Image.fromarray(final_img).save(raw_uv_path)
 
-        # ---------- Post-Processing: Face-Neck Correction ----------
-        FACE_NECK_MASK_PATH = "/content/Towards-Realistic-Generative-3D-Face-Models/data/uv_face_neck_mask.png"  
-        corrected_uv = apply_face_neck_correction(uv_texture_np=final_img, mask_path=FACE_NECK_MASK_PATH, blend_ratio=0.4)
+    # ---------- Post-Processing: Face-Neck Correction ----------
+    FACE_NECK_MASK_PATH = "/content/Towards-Realistic-Generative-3D-Face-Models/data/uv_face_neck_mask.png"  
+    corrected_uv = apply_face_neck_correction(uv_texture_np=final_img, mask_path=FACE_NECK_MASK_PATH, blend_ratio=0.4)
 
-        corrected_path = os.path.join(out_dir, f"uv_complete_corrected_{base}.png")
-        Image.fromarray(corrected_uv).save(corrected_path)
+    corrected_path = os.path.join(out_dir, f"uv_complete_neck_correction_{base}.png")
+    Image.fromarray(corrected_uv).save(corrected_path)
 
-        # ---------- Post-Processing: Auto-Gamma ----------
-        uv_post = corrected_uv.copy()
-        if auto_gamma:
-           hsv = cv2.cvtColor(uv_post, cv2.COLOR_RGB2HSV)
-           V = hsv[:,:,2].astype(np.float32)/255.0
-           V_safe = np.clip(V, 1e-4, 1.0)
-           mean_lin = np.mean(V_safe)
-           mean_log = np.mean(np.log(V_safe))
-           gamma = np.clip(np.log(mean_lin)/mean_log, 0.6, 2.4)
-           uv_post = np.power(uv_post/255.0, 1.0/gamma)
-           uv_post = np.clip(uv_post*255,0,255).astype(np.uint8)
+    # ---------- Post-Processing: Auto-Gamma ----------
+    uv_post = corrected_uv.copy()
+    if auto_gamma:
+       hsv = cv2.cvtColor(uv_post, cv2.COLOR_RGB2HSV)
+       V = hsv[:,:,2].astype(np.float32)/255.0
+       V_safe = np.clip(V, 1e-4, 1.0)
+       mean_lin = np.mean(V_safe)
+       mean_log = np.mean(np.log(V_safe))
+       gamma = np.clip(np.log(mean_lin)/mean_log, 0.6, 2.4)
+       uv_post = np.power(uv_post/255.0, 1.0/gamma)
+       uv_post = np.clip(uv_post*255,0,255).astype(np.uint8)
 
-        post_path = os.path.join(out_dir, f"uv_complete_post_{base}.png")
-        Image.fromarray(uv_post).save(post_path)
+    post_path = os.path.join(out_dir, f"uv_complete_gamma_correction_{base}.png")
+    Image.fromarray(uv_post).save(post_path)
 
-        # ================= Save Final OBJ + Frontal Render =================
-        with torch.no_grad():
+    # ================= Save Final OBJ + Frontal Render =================
+    with torch.no_grad():
 
-          # decode 
-          opdict, visdict = deca.decode(codedict , name=base)
+      # decode 
+      opdict, visdict = deca.decode(codedict , name=base)
 
-          # UV (only upscale if needed)
-          uv_corr_tensor = torch.from_numpy(uv_post).float() / 255.0
-          uv_corr_tensor = uv_corr_tensor.permute(2,0,1).unsqueeze(0).to(device)
-          if uv_corr_tensor.shape[-1] != 1024:
-             uv_corr_tensor = torch.nn.functional.interpolate(uv_corr_tensor, (1024,1024), mode="bicubic", align_corners=False)
+      # UV (only upscale if needed)
+      uv_corr_tensor = torch.from_numpy(uv_post).float() / 255.0
+      uv_corr_tensor = uv_corr_tensor.permute(2,0,1).unsqueeze(0).to(device)
+      if uv_corr_tensor.shape[-1] != 1024:
+          uv_corr_tensor = torch.nn.functional.interpolate(uv_corr_tensor, (1024,1024), mode="bicubic", align_corners=False)
          
-          opdict['uv_texture_gt'] = uv_corr_tensor
+      opdict['uv_texture_gt'] = uv_corr_tensor
 
-          obj_path = os.path.join(out_dir, f"{base}.obj")
-          deca.save_obj(obj_path, opdict, codedict)
+      obj_path = os.path.join(out_dir, f"{base}.obj")
+      deca.save_obj(obj_path, opdict, codedict)
 
     # ================= Final Print =================
     print(f"\n✅[TRAINING COMPLETE] UV completion for '{base}' finished.")
