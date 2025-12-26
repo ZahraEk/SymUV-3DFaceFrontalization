@@ -254,7 +254,7 @@ def train_single_uv(img_name, input_dir, out_dir="results", iters=500, warmup=15
     Image.fromarray(final_img).save(raw_uv_path)
 
     # ---------- Post-Processing: Face-Neck Correction ----------
-    FACE_NECK_MASK_PATH = "/content/Towards-Realistic-Generative-3D-Face-Models/data/uv_face_neck_mask.png"  
+    FACE_NECK_MASK_PATH = "/content/Towards-Realistic-Generative-3D-Face-Models/data/modified_uv_face_eye_mask.png"  
     corrected_uv = apply_face_neck_correction(uv_texture_np=final_img, mask_path=FACE_NECK_MASK_PATH, blend_ratio=0.5)
 
     corrected_path = os.path.join(out_dir, f"uv_complete_neck_correction_{base}.png")
