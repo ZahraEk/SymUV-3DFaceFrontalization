@@ -28,7 +28,7 @@ from img_2_tex import mesh_angle, tex_correction, apply_face_neck_correction
 # ArcFace ONNX model for identity preservation
 ONNX_MODEL_LOCAL = "arcfaceresnet100-int8.onnx"
 
-def train_single_uv(img_name, input_dir, out_dir="results", iters=500, uv_size=512, auto_gamma=True):
+def train_single_uv(img_name, input_dir, out_dir="results", iters=500, warmup=150, uv_size=512, auto_gamma=True):
     """
     Train a UV completion GAN using:
       - Explicit UV target (pose-corrected)
@@ -140,14 +140,13 @@ def train_single_uv(img_name, input_dir, out_dir="results", iters=500, uv_size=5
     codedict['images'] = img_cropped
 
     # ================= Loss Weights =================
-    WEIGHT_ADV_UV = 0.008
+    WEIGHT_ADV_UV = 0.005
     WEIGHT_RENDER_ADV = 0.01       
     WEIGHT_RENDER_REC = 1.0
-    WEIGHT_RENDER_VGG = 0.5
-    WEIGHT_RENDER_ID = 0.08
+    WEIGHT_RENDER_VGG = 0.2
+    WEIGHT_RENDER_ID = 0.05
     WEIGHT_SYM = 2.0
     WEIGHT_SEAM = 1.0
-    WARMUP = 50
 
     # ================= Training Loop =================
     for i in range(iters):
@@ -177,7 +176,7 @@ def train_single_uv(img_name, input_dir, out_dir="results", iters=500, uv_size=5
         L_render_ID = L_ID(render_img*face_mask_img, img_gt*face_mask_img)
 
         # ---------- Image GAN (Generator) ----------
-        if i > WARMUP:  
+        if i > warmup:  
             pred_fake_img = D_img(render_img * face_mask_img)
             L_adv_img = hinge_g_loss(pred_fake_img)
         else:
@@ -224,13 +223,13 @@ def train_single_uv(img_name, input_dir, out_dir="results", iters=500, uv_size=5
         opt_d_uv.zero_grad()
         d_real, _ = D_uv(x_uv_raw)
         d_fake, _ = D_uv(x_z_out.detach())
-        if i > WARMUP:
+        if i > warmup:
             L_d_uv = hinge_d_loss(d_real, d_fake)
             L_d_uv.backward()
             opt_d_uv.step()
 
         # ---------- Image Discriminator ----------
-        if i > WARMUP:  
+        if i > warmup:  
             opt_d_img.zero_grad()
             pred_real = D_img(img_gt * face_mask_img)
             pred_fake = D_img(render_img.detach() * face_mask_img)
@@ -256,12 +255,12 @@ def train_single_uv(img_name, input_dir, out_dir="results", iters=500, uv_size=5
 
     # ---------- Post-Processing: Face-Neck Correction ----------
     FACE_NECK_MASK_PATH = "/content/Towards-Realistic-Generative-3D-Face-Models/data/uv_face_neck_mask.png"  
-    corrected_uv = apply_face_neck_correction(uv_texture_np=final_img, mask_path=FACE_NECK_MASK_PATH, blend_ratio=0.4)
+    corrected_uv = apply_face_neck_correction(uv_texture_np=final_img, mask_path=FACE_NECK_MASK_PATH, blend_ratio=0.5)
 
     corrected_path = os.path.join(out_dir, f"uv_complete_neck_correction_{base}.png")
     Image.fromarray(corrected_uv).save(corrected_path)
 
-    # ---------- Post-Processing: Auto-Gamma ----------
+    # ---------- Post-Processing: Auto-Gamma Correction ----------
     uv_post = corrected_uv.copy()
     if auto_gamma:
        hsv = cv2.cvtColor(uv_post, cv2.COLOR_RGB2HSV)
@@ -303,10 +302,11 @@ if __name__ == "__main__":
     parser.add_argument("--img", required=True)
     parser.add_argument("--out_dir", default=None)
     parser.add_argument("--iters", type=int, default=500)
+    parser.add_argument("--warmup", type=int, default=150)
     parser.add_argument("--uv_size", type=int, default=512)
     args = parser.parse_args()
 
     base = os.path.splitext(os.path.basename(args.img))[0]
     out_dir = args.out_dir or f"{base}_train_uv_results"
 
-    train_single_uv(args.img, args.input_dir, out_dir, args.iters, args.uv_size, auto_gamma=True)
+    train_single_uv(args.img, args.input_dir, out_dir, args.iters, args.warmup, args.uv_size, auto_gamma=True)
