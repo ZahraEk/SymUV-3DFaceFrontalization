@@ -300,8 +300,7 @@ def inpaint_nasal_region_uv(img, face_mask):
 def tex_correction(uv_texture, angle,
                    mask_color_correction="/content/Towards-Realistic-Generative-3D-Face-Models/data/modified_uv_face_eye_mask.png",
                    mask_inpaint_nasal="/content/Towards-Realistic-Generative-3D-Face-Models/data/uv_face_neck_mask.png",
-                   gradient_ratio=0.2, center_band=150,
-                   auto_gamma=True):
+                   gradient_ratio=0.2, center_band=150):
     """
     UV texture correction with histogram alignment, symmetry-based repair,
     soft blending, neck–face color adjustment, and adaptive gamma correction.
@@ -372,17 +371,6 @@ def tex_correction(uv_texture, angle,
 
     # Adjust neck coloration to match facial chromaticity.
     blended = apply_face_neck_correction(blended, mask_color_correction, blend_ratio=0.5)
-
-    # Apply log-based gamma correction to improve tonal balance.
-    if auto_gamma:
-        hsv = cv2.cvtColor(blended, cv2.COLOR_RGB2HSV)
-        V = hsv[:, :, 2].astype(np.float32) / 255.0
-        V_safe = np.clip(V, 1e-4, 1.0)
-        mean_lin = np.mean(V_safe)
-        mean_log = np.mean(np.log(V_safe))
-        gamma = np.clip(np.log(mean_lin) / mean_log, 0.6, 2.4)
-        blended = np.power(blended / 255.0, 1.0 / gamma)
-        blended = np.clip(blended * 255, 0, 255).astype(np.uint8)
 
     # Nasal inpainting
     #mask_nasal = imageio.imread(mask_inpaint_nasal)
