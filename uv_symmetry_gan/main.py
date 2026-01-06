@@ -28,7 +28,7 @@ from img_2_tex import mesh_angle, tex_correction, apply_face_neck_correction
 # ArcFace ONNX model for identity preservation
 ONNX_MODEL_LOCAL = "arcfaceresnet100-int8.onnx"
 
-def train_single_uv(img_name, input_dir, out_dir="results", iters=500, warmup=150, uv_size=512, auto_gamma=True):
+def train_single_uv(img_name, input_dir, out_dir="results", iters=500, warmup=150, uv_size=512):
     """
     Train a UV completion GAN using:
       - Explicit UV target (pose-corrected)
@@ -260,21 +260,6 @@ def train_single_uv(img_name, input_dir, out_dir="results", iters=500, warmup=15
     corrected_path = os.path.join(out_dir, f"uv_complete_neck_correction_{base}.png")
     Image.fromarray(corrected_uv).save(corrected_path)
 
-    # ---------- Post-Processing: Auto-Gamma Correction ----------
-    uv_post = corrected_uv.copy()
-    if auto_gamma:
-       hsv = cv2.cvtColor(uv_post, cv2.COLOR_RGB2HSV)
-       V = hsv[:,:,2].astype(np.float32)/255.0
-       V_safe = np.clip(V, 1e-4, 1.0)
-       mean_lin = np.mean(V_safe)
-       mean_log = np.mean(np.log(V_safe))
-       gamma = np.clip(np.log(mean_lin)/mean_log, 0.6, 2.4)
-       uv_post = np.power(uv_post/255.0, 1.0/gamma)
-       uv_post = np.clip(uv_post*255,0,255).astype(np.uint8)
-
-    post_path = os.path.join(out_dir, f"uv_complete_gamma_correction_{base}.png")
-    Image.fromarray(uv_post).save(post_path)
-
     # ================= Save Final OBJ + Frontal Render =================
     with torch.no_grad():
 
@@ -282,7 +267,7 @@ def train_single_uv(img_name, input_dir, out_dir="results", iters=500, warmup=15
       opdict, visdict = deca.decode(codedict , name=base)
 
       # UV (only upscale if needed)
-      uv_corr_tensor = torch.from_numpy(uv_post).float() / 255.0
+      uv_corr_tensor = torch.from_numpy(corrected_uv).float() / 255.0
       uv_corr_tensor = uv_corr_tensor.permute(2,0,1).unsqueeze(0).to(device)
       if uv_corr_tensor.shape[-1] != 1024:
           uv_corr_tensor = torch.nn.functional.interpolate(uv_corr_tensor, (1024,1024), mode="bicubic", align_corners=False)
@@ -309,4 +294,4 @@ if __name__ == "__main__":
     base = os.path.splitext(os.path.basename(args.img))[0]
     out_dir = args.out_dir or f"{base}_train_uv_results"
 
-    train_single_uv(args.img, args.input_dir, out_dir, args.iters, args.warmup, args.uv_size, auto_gamma=True)
+    train_single_uv(args.img, args.input_dir, out_dir, args.iters, args.warmup, args.uv_size)
