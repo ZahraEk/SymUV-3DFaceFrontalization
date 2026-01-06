@@ -7,19 +7,19 @@ from pathlib import Path
 from pytorch3d.io import load_objs_as_meshes
 from pytorch3d.renderer import (
     FoVPerspectiveCameras, RasterizationSettings, MeshRenderer,
-    MeshRasterizer, HardPhongShader, BlendParams, look_at_view_transform
+    MeshRasterizer, HardPhongShader, DirectionalLights, BlendParams, look_at_view_transform
 )
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # ---------- Defaults ----------
-FOV_DEG = 20.0
-PAD = 0.85
-PAD_TOP = 0.95
+FOV_DEG = 10.0
+PAD = 0.60
+PAD_TOP = 0.98
 IMG_SIZE_DEFAULT = 1024
 
 # ---------- Renderer ----------
-def make_renderer(center, radius, azim_deg, *, elev_deg=0.0, roll_deg=0.0, image_size=IMG_SIZE_DEFAULT):
+def make_renderer(center, radius, azim_deg, *, elev_deg=0.0, roll_deg=0.0, image_size=IMG_SIZE_DEFAULT, no_lighting=True):
     dist = (radius / np.tan(np.deg2rad(FOV_DEG * 0.5))) * PAD
 
     if center.ndim == 1:
@@ -50,15 +50,36 @@ def make_renderer(center, radius, azim_deg, *, elev_deg=0.0, roll_deg=0.0, image
         bin_size=None,
         max_faces_per_bin=80000
     )
+
+    if no_lighting:
+       lights = DirectionalLights(
+        device=device,
+        direction=((0, 0, -1),),
+        ambient_color=((1.0, 1.0, 1.0),),
+        diffuse_color=((0.0, 0.0, 0.0),),
+        specular_color=((0.0, 0.0, 0.0),),)
+    else:
+       lights = DirectionalLights(
+        device=device,
+        direction=((0, 0, -1),),
+        ambient_color=((0.3, 0.3, 0.3),),
+        diffuse_color=((0.7, 0.7, 0.7),),
+        specular_color=((0.2, 0.2, 0.2),),)
+
     blend_params = BlendParams(gamma=1.0, background_color=(1.0, 1.0, 1.0))
+    
     return MeshRenderer(
-        rasterizer=MeshRasterizer(cameras=cams, raster_settings=raster_settings),
-        shader=HardPhongShader(device=device, cameras=cams, blend_params=blend_params)
-    )
+    rasterizer=MeshRasterizer(cameras=cams, raster_settings=raster_settings),
+    shader=HardPhongShader(
+        device=device,
+        cameras=cams,
+        lights=lights,
+        blend_params=blend_params
+    ))
 
 # ---------- Render helpers ----------
-def render_rgb(mesh, center, radius, azim_deg, *, roll_deg=0.0, out_size=IMG_SIZE_DEFAULT, elev_deg=0.0):
-    renderer = make_renderer(center, radius, azim_deg, elev_deg=elev_deg, roll_deg=roll_deg, image_size=out_size)
+def render_rgb(mesh, center, radius, azim_deg, *, roll_deg=0.0, out_size=IMG_SIZE_DEFAULT, elev_deg=0.0, no_lighting=True):
+    renderer = make_renderer(center, radius, azim_deg, elev_deg=elev_deg, roll_deg=roll_deg, image_size=out_size, no_lighting=no_lighting)
     img = renderer(mesh)[0, ..., :3].detach().cpu().numpy()
     img = (img * 255).astype(np.uint8)
     return cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
@@ -88,12 +109,12 @@ def find_frontal_angles(mesh, center, radius,
                         max_yaw=90, max_roll=20,
                         coarse_step_yaw=3.0, coarse_step_roll=5.0,
                         fine_window_yaw=8.0, fine_step_yaw=0.5,
-                        fine_window_roll=5.0, fine_step_roll=1.0):
+                        fine_window_roll=5.0, fine_step_roll=1.0, no_lighting=True):
 
     yaw_candidates = np.arange(-max_yaw, max_yaw + 1e-6, coarse_step_yaw)
     scores = []
     for y in yaw_candidates:
-        img = render_rgb(mesh, center, radius, y, out_size=256)
+        img = render_rgb(mesh, center, radius, y, out_size=256, no_lighting=no_lighting)
         score = symmetry_score(img)
         scores.append(score)
     best_yaw = float(yaw_candidates[int(np.argmin(scores))])
@@ -102,7 +123,7 @@ def find_frontal_angles(mesh, center, radius,
     yaw_candidates = np.arange(best_yaw - fine_window_yaw, best_yaw + fine_window_yaw + 1e-6, fine_step_yaw)
     scores = []
     for y in yaw_candidates:
-        img = render_rgb(mesh, center, radius, y, out_size=320)
+        img = render_rgb(mesh, center, radius, y, out_size=320, no_lighting=no_lighting)
         score = symmetry_score(img)
         scores.append(score)
     best_yaw = float(yaw_candidates[int(np.argmin(scores))])
@@ -111,7 +132,7 @@ def find_frontal_angles(mesh, center, radius,
     roll_candidates = np.arange(-max_roll, max_roll + 1e-6, coarse_step_roll)
     scores = []
     for r in roll_candidates:
-        img = render_rgb(mesh, center, radius, best_yaw, roll_deg=r, out_size=320)
+        img = render_rgb(mesh, center, radius, best_yaw, roll_deg=r, out_size=320, no_lighting=no_lighting)
         score = symmetry_score(img)
         scores.append(score)
     best_roll = float(roll_candidates[int(np.argmin(scores))])
@@ -119,7 +140,7 @@ def find_frontal_angles(mesh, center, radius,
     roll_candidates = np.arange(best_roll - fine_window_roll, best_roll + fine_window_roll + 1e-6, fine_step_roll)
     scores = []
     for r in roll_candidates:
-        img = render_rgb(mesh, center, radius, best_yaw, roll_deg=r, out_size=400)
+        img = render_rgb(mesh, center, radius, best_yaw, roll_deg=r, out_size=400, no_lighting=no_lighting)
         score = symmetry_score(img)
         scores.append(score)
     best_roll = float(roll_candidates[int(np.argmin(scores))])
@@ -127,18 +148,18 @@ def find_frontal_angles(mesh, center, radius,
     return best_yaw, best_roll
 
 # ---------- Image/GIF helpers ----------
-def save_frontal_image(mesh_path, frontal_path):
+def save_frontal_image(mesh_path, frontal_path, no_lighting=True):
     mesh, center, radius = load_mesh_center_radius(mesh_path)
-    yaw, roll = find_frontal_angles(mesh, center, radius)
-    img = render_rgb(mesh, center, radius, yaw, roll_deg=roll, out_size=IMG_SIZE_DEFAULT)
+    yaw, roll = find_frontal_angles(mesh, center, radius, no_lighting=no_lighting)
+    img = render_rgb(mesh, center, radius, yaw, roll_deg=roll, out_size=IMG_SIZE_DEFAULT, no_lighting=no_lighting)
     os.makedirs(os.path.dirname(frontal_path), exist_ok=True)
     cv2.imwrite(frontal_path, img)
     print(f"Best pose -> yaw: {yaw:.2f}, roll: {roll:.2f}")
     return frontal_path, yaw, roll
 
-def save_rotation_gif(mesh_path, out_gif, n_frames=30, fps=15, delta_yaw=45.0):
+def save_rotation_gif(mesh_path, out_gif, n_frames=30, fps=15, delta_yaw=45.0, no_lighting=True):
     mesh, center, radius = load_mesh_center_radius(mesh_path)
-    yaw, roll = find_frontal_angles(mesh, center, radius)
+    yaw, roll = find_frontal_angles(mesh, center, radius, no_lighting=no_lighting)
     os.makedirs(os.path.dirname(out_gif), exist_ok=True)
 
     forward = np.linspace(yaw - delta_yaw, yaw + delta_yaw, n_frames)
@@ -147,27 +168,27 @@ def save_rotation_gif(mesh_path, out_gif, n_frames=30, fps=15, delta_yaw=45.0):
 
     frames = []
     for a in angles:
-        img = render_rgb(mesh, center, radius, a, roll_deg=roll, out_size=IMG_SIZE_DEFAULT)
+        img = render_rgb(mesh, center, radius, a, roll_deg=roll, out_size=IMG_SIZE_DEFAULT, no_lighting=no_lighting)
         frames.append(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
 
     imageio.mimsave(out_gif, frames, fps=fps)
     print(f"✅Rotation GIF saved at: {out_gif}")
     return out_gif
 
-def save_frontal_and_side_images(mesh_path, out_dir, side_yaw=30.0):
+def save_frontal_and_side_images(mesh_path, out_dir, side_yaw=30.0, no_lighting=True):
     mesh, center, radius = load_mesh_center_radius(mesh_path)
-    yaw, roll = find_frontal_angles(mesh, center, radius)
+    yaw, roll = find_frontal_angles(mesh, center, radius, no_lighting=no_lighting)
     os.makedirs(out_dir, exist_ok=True)
     base_name = Path(mesh_path).stem
 
     frontal_path = os.path.join(out_dir, f"{base_name}_frontal.png")
-    cv2.imwrite(frontal_path, render_rgb(mesh, center, radius, yaw, roll_deg=roll, out_size=IMG_SIZE_DEFAULT))
+    cv2.imwrite(frontal_path, render_rgb(mesh, center, radius, yaw, roll_deg=roll, out_size=IMG_SIZE_DEFAULT, no_lighting=no_lighting))
 
     left_path = os.path.join(out_dir, f"{base_name}_left.png")
-    cv2.imwrite(left_path, render_rgb(mesh, center, radius, yaw - side_yaw, roll_deg=roll, out_size=IMG_SIZE_DEFAULT))
+    cv2.imwrite(left_path, render_rgb(mesh, center, radius, yaw - side_yaw, roll_deg=roll, out_size=IMG_SIZE_DEFAULT, no_lighting=no_lighting))
 
     right_path = os.path.join(out_dir, f"{base_name}_right.png")
-    cv2.imwrite(right_path, render_rgb(mesh, center, radius, yaw + side_yaw, roll_deg=roll, out_size=IMG_SIZE_DEFAULT))
+    cv2.imwrite(right_path, render_rgb(mesh, center, radius, yaw + side_yaw, roll_deg=roll, out_size=IMG_SIZE_DEFAULT, no_lighting=no_lighting))
   
     print(f"Best pose -> yaw: {yaw:.2f}, roll: {roll:.2f}")
     return frontal_path, left_path, right_path, yaw, roll
@@ -185,8 +206,10 @@ if __name__ == "__main__":
     parser.add_argument("--fps", type=int, default=15)
     parser.add_argument("--side_yaw", type=float, default=30.0, help="Yaw offset for side views")
     parser.add_argument("--delta_yaw", type=float, default=45.0, help="Yaw range for rotation GIF (±degrees)")
+    parser.add_argument("--lighting", action="store_true",help="Enable lighting (default: texture-only, no lighting)")
 
     args = parser.parse_args()
+    no_lighting = not args.lighting
 
     print("=== Render frontal + side views + GIF from 3D face mesh ===")
     os.makedirs(args.out_dir, exist_ok=True)
@@ -194,8 +217,7 @@ if __name__ == "__main__":
 
     # ---------- Frontal + Side images ----------
     frontal_path, left_path, right_path, yaw, roll = save_frontal_and_side_images(
-        args.mesh, args.out_dir, side_yaw=args.side_yaw
-    )
+        args.mesh, args.out_dir, side_yaw=args.side_yaw, no_lighting=no_lighting )
     print("Rendering frontal and side views...")
     print(f"✅Frontal view: {frontal_path}")
     print(f"✅Left view: {left_path}")
@@ -204,9 +226,5 @@ if __name__ == "__main__":
     # ---------- Rotation GIF ----------
     print("Rendering rotation GIF...")
     gif_path = os.path.join(args.out_dir, f"{base_name}_rotation.gif")
-    save_rotation_gif(
-        args.mesh, gif_path, n_frames=args.n_frames, fps=args.fps, delta_yaw=args.delta_yaw
-    )
+    save_rotation_gif(args.mesh, gif_path, n_frames=args.n_frames, fps=args.fps, delta_yaw=args.delta_yaw, no_lighting=no_lighting)
     print("=== Rendering finished ===")
-
-
