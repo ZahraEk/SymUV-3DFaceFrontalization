@@ -1,14 +1,41 @@
-# Towards Realistic Generative 3D Face Models (AlbedoGAN)
+# Towards Realistic Generative 3D Face Models — Extended Fork
+This repository is a research-oriented fork of the official implementation of:
 
-Aashish Rai, Hiresh Gupta*, Ayush Pandey*,  Francisco Vicente Carrasco, Shingo Jason Takagi, Amaury Aubel, Daeil Kim, Aayush Prakash, Fernando de la Torre
+Towards Realistic Generative 3D Face Models (AlbedoGAN)
+Aashish Rai, Hiresh Gupta*, Ayush Pandey*, Francisco Vicente Carrasco, Shingo Jason Takagi, Amaury Aubel, Daeil Kim, Aayush Prakash, Fernando de la Torre
+### Carnegie Mellon University & Meta Reality Labs — WACV 2024
 
-### Carnegie Mellon University, Meta Reality Labs
+Original resources:
 
-### WACV 2024 
+Project Page
 
-[[Project Page](https://aashishrai3799.github.io/Towards-Realistic-Generative-3D-Face-Models)] [[Arxiv](https://arxiv.org/pdf/2304.12483.pdf)] [[Demo Results](https://drive.google.com/file/d/1FCEUL1Xaaz75vYZEomSOYjS91tlOcW8Q/view?usp=sharing)]
+ArXiv
 
-We propose a 3D face generative model that generates high-quality albedo and precise 3D shape by leveraging StyleGAN2, resulting in a photo-realistic rendered image.
+Demo Results
+
+Overview
+
+The original project proposes a generative 3D face model that jointly synthesizes high-quality albedo textures and accurate 3D geometry using a StyleGAN2-based framework, enabling photo-realistic rendering.
+
+This fork explores research extensions and experimental modifications for improving texture completion, symmetry enforcement, training stability, and identity preservation in partially observed facial textures.
+
+🔧 About This Fork
+
+This repository contains independent research modifications by Zahra Ek, with a focus on:
+
+UV texture completion and symmetry-based inpainting
+
+Gradient-guided symmetry constraints
+
+Loss re-weighting schedules and training stabilization
+
+UV-space and image-space discriminator refinements
+
+Identity-preserving integration experiments (e.g., DECA, MICA, ArcFace)
+
+Gamma / illumination correction strategies
+
+⚠️ These changes are experimental and not part of the official WACV 2024 release.
 
 
 ![](figure_1.png)
