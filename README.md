@@ -5,35 +5,25 @@ Towards Realistic Generative 3D Face Models (AlbedoGAN)
 Aashish Rai, Hiresh Gupta*, Ayush Pandey*, Francisco Vicente Carrasco, Shingo Jason Takagi, Amaury Aubel, Daeil Kim, Aayush Prakash, Fernando de la Torre
 ### Carnegie Mellon University & Meta Reality Labs — WACV 2024
 
-Original resources:
-
-Project Page
-
-ArXiv
-
-Demo Results
-
-Overview
-
 The original project proposes a generative 3D face model that jointly synthesizes high-quality albedo textures and accurate 3D geometry using a StyleGAN2-based framework, enabling photo-realistic rendering.
 
 This fork explores research extensions and experimental modifications for improving texture completion, symmetry enforcement, training stability, and identity preservation in partially observed facial textures.
 
-🔧 About This Fork
+###🔧 About This Fork
 
 This repository contains independent research modifications by Zahra Ek, with a focus on:
 
-UV texture completion and symmetry-based inpainting
+- UV texture completion and symmetry-based inpainting
 
-Gradient-guided symmetry constraints
+- Gradient-guided symmetry constraints
 
-Loss re-weighting schedules and training stabilization
+- Loss re-weighting schedules and training stabilization
 
-UV-space and image-space discriminator refinements
+- UV-space and image-space discriminator refinements
 
-Identity-preserving integration experiments (e.g., DECA, MICA, ArcFace)
+- Identity-preserving integration experiments (e.g., DECA, MICA, ArcFace)
 
-Gamma / illumination correction strategies
+- Gamma / illumination correction strategies
 
 ⚠️ These changes are experimental and not part of the official WACV 2024 release.
 
