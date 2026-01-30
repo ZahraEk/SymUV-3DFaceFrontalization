@@ -79,7 +79,8 @@ Additional research extensions and modifications were implemented by Zahra Ek.
 
 The original project is released under the X11 License.
 
-This fork preserves the same license.Please read the license terms available at [[Link](https://github.com/ZahraEk/Towards-Realistic-Generative-3D-Face-Models/blob/main/LICENSE)]. 
+This fork preserves the same license. Please read the license terms available at [[Link](https://github.com/ZahraEk/Towards-Realistic-Generative-3D-Face-Models/blob/main/LICENSE)].
+
 All original code and credit belong to the authors of the WACV 2024 paper.
 Modifications and additions are provided by Zahra Ek under the same terms.
 
