@@ -1,7 +1,7 @@
 # Towards Realistic Generative 3D Face Models — UV Texture Completion via Symmetry-Guided GAN
 This repository presents a **research-oriented fork** of the official implementation of:
 
-### Towards Realistic Generative 3D Face Models (WACV 2024)
+**Towards Realistic Generative 3D Face Models (WACV 2024)**
 Aashish Rai et al., Carnegie Mellon University & Meta Reality Labs.
 
 The primary goal of this fork is to investigate a self-supervised UV texture completion framework for generative 3D face modeling under extreme pose variations, self-occlusion, and large missing-texture regions.
@@ -13,7 +13,6 @@ Reconstructing complete and realistic facial UV textures from a **single in-the-
 While the original work introduces a StyleGAN2-based framework for high-quality joint synthesis of facial geometry and texture, it assumes access to well-structured training data and does not explicitly address **UV degradation under large pose changes**.
 
 This repository introduces **UV Symmetry GAN**, an **end-to-end self-supervised framework** for **UV texture correction and completion** from a single image, **without requiring complete UV maps, multi-view data, or 3D scans**.
----
 
 ## 🧠 Key Idea
 
@@ -29,6 +28,23 @@ Instead of hallucinating missing regions blindly, the method:
 
 ![](supp_image.png)
 
+## 🚀 Quick Start (Google Colab)
+
+The easiest way to try the UV Symmetry GAN pipeline is through the provided Google Colab notebook, which runs the full UV completion and 3D reconstruction process end-to-end.
+
+👉 Open in Colab – [UV Symmetry GAN pipeline](https://github.com/ZahraEk/Towards-Realistic-Generative-3D-Face-Models/blob/main/Towards_Realistic_Generative_3D_Face_Models_.ipynb)
+<img width="117" height="20" alt="image" src="https://github.com/user-attachments/assets/15e7944b-4493-4daa-8869-c7fb25182397" />
+
+The notebook walks through:
+
+- installing dependencies,
+- downloading pretrained models,
+- running DECA-based reconstruction,
+- performing symmetry-guided UV completion,
+- rendering completed 3D meshes,
+- generating multi-view visualizations and rotation videos.
+
+No local setup is required beyond a Google account.
 
 ## Inference
 
