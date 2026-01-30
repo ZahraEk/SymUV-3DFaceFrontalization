@@ -63,20 +63,29 @@ Download AlbedoGAN modified weights from the following [[LINK](https://drive.goo
 
 ## Acknowledgements
 
-For functions or scripts that are based on external sources, we acknowledge the origin individually in each file.
-Our code is inspired by the following code repositories. Please make sure to refer to their and our license terms before downloading the pre-trained weights.
+This repository is based on the official implementation released by Carnegie Mellon University and Meta Reality Labs for the WACV 2024 paper "Towards Realistic Generative 3D Face Models".
+
+We retain acknowledgements to third-party projects used in the original codebase. Parts of this repository rely on or are inspired by the following works:
 
 1. [[DECA](https://github.com/yfeng95/DECA)]
 2. [[MICA](https://github.com/Zielon/MICA)]
 3. [[FLAME](https://github.com/soubhiksanyal/FLAME_PyTorch)]
-    
+
+Please refer to the respective license terms of these projects, as well as the X11 license of this repository, before using the code or any pre-trained models.
+
+Additional research extensions and modifications were implemented by Zahra Ek.
+
 ## License Terms
 
-The code is available under X11 License. Please read the license terms available at [[Link](https://github.com/aashishrai3799/Towards-Realistic-Generative-3D-Face-Models/blob/main/LICENSE)]. Quick summary available at [[Link](https://www.tldrlegal.com/l/x11)].
+The original project is released under the X11 License.
+
+This fork preserves the same license.Please read the license terms available at [[Link](https://github.com/ZahraEk/Towards-Realistic-Generative-3D-Face-Models/blob/main/LICENSE)]. 
+All original code and credit belong to the authors of the WACV 2024 paper.
+Modifications and additions are provided by Zahra Ek under the same terms.
 
 ## Citation
 
-If you find this paper/code useful, please consider citing:
+If you find this code useful, please cite the original paper:
 
 ```bibtex
 @article{rai2023towards,
