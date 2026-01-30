@@ -1,31 +1,28 @@
-# Towards Realistic Generative 3D Face Models — Extended Fork
-This repository is a research-oriented fork of the official implementation of:
+# Towards Realistic Generative 3D Face Models — UV Texture Completion via Symmetry-Guided GAN
+This repository presents a **research-oriented fork** of the official implementation of:
 
-Towards Realistic Generative 3D Face Models (AlbedoGAN)
-Aashish Rai, Hiresh Gupta*, Ayush Pandey*, Francisco Vicente Carrasco, Shingo Jason Takagi, Amaury Aubel, Daeil Kim, Aayush Prakash, Fernando de la Torre
-### Carnegie Mellon University & Meta Reality Labs — WACV 2024
+### Towards Realistic Generative 3D Face Models (WACV 2024)
+Aashish Rai et al., Carnegie Mellon University & Meta Reality Labs.
 
-The original project proposes a generative 3D face model that jointly synthesizes high-quality albedo textures and accurate 3D geometry using a StyleGAN2-based framework, enabling photo-realistic rendering.
+The primary goal of this fork is to investigate a self-supervised UV texture completion framework for generative 3D face modeling under extreme pose variations, self-occlusion, and large missing-texture regions.
 
-This fork explores research extensions and experimental modifications for improving texture completion, symmetry enforcement, training stability, and identity preservation in partially observed facial textures.
+## 🔍 Overview
 
-###🔧 About This Fork
+Reconstructing complete and realistic facial UV textures from a **single in-the-wild image** remains a challenging problem due to extreme pose variations, self-occlusion, and the absence of ground-truth UV supervision.
 
-This repository contains independent research modifications by Zahra Ek, with a focus on:
+While the original work introduces a StyleGAN2-based framework for high-quality joint synthesis of facial geometry and texture, it assumes access to well-structured training data and does not explicitly address **UV degradation under large pose changes**.
 
-- UV texture completion and symmetry-based inpainting
+This repository introduces **UV Symmetry GAN**, an **end-to-end self-supervised framework** for **UV texture correction and completion** from a single image, **without requiring complete UV maps, multi-view data, or 3D scans**.
+---
 
-- Gradient-guided symmetry constraints
+## 🧠 Key Idea
 
-- Loss re-weighting schedules and training stabilization
+The core idea is to exploit the **intrinsic bilateral symmetry of human faces** as a source of **implicit supervision**.
 
-- UV-space and image-space discriminator refinements
-
-- Identity-preserving integration experiments (e.g., DECA, MICA, ArcFace)
-
-- Gamma / illumination correction strategies
-
-⚠️ These changes are experimental and not part of the official WACV 2024 release.
+Instead of hallucinating missing regions blindly, the method:
+- identifies a *healthy* facial half using reconstructed 3D geometry,
+- transfers reliable texture information from the healthy side to the degraded side,
+- and refines the UV map through adversarial and perceptual supervision.
 
 
 ![](figure_1.png)
