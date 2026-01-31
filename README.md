@@ -48,12 +48,11 @@ No local setup is required beyond a Google account.
 ## Inference
 
 Conda environment: Refer environment.yml
-
-    ```
+ 
+   ```
 conda env create -f environment.yml
-
 conda activate new_torchenv
-    ```
+   ```
     
 **Pre-trained Models**
 
