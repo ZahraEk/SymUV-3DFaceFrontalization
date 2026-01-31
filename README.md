@@ -2,6 +2,7 @@
 This repository presents a **research-oriented fork** of the official implementation of:
 
 [**Towards Realistic Generative 3D Face Models (WACV 2024)**](https://github.com/aashishrai3799/Towards-Realistic-Generative-3D-Face-Models/?tab=readme-ov-file)
+
 Aashish Rai et al., Carnegie Mellon University & Meta Reality Labs.
 
 The primary goal of this fork is to investigate a self-supervised UV texture completion framework for generative 3D face modeling under extreme pose variations, self-occlusion, and large missing-texture regions.
@@ -63,7 +64,7 @@ Follow [[DECA](https://github.com/yfeng95/DECA)] to download DECA pre-trained we
 
 Download AlbedoGAN modified weights from the following [[LINK](https://drive.google.com/drive/folders/1nJw8rUBTLcyhvCMTDohE_KcKKtFI6Orm?usp=sharing)]. Put these modified ArcFace backbone and DECA weights to generate better reconstruction results.
 
--### **UV Texture Completion and Correction**
+- ### **UV Texture Completion and Correction**
   
   This script extracts UV textures using DECA, estimates head pose, automatically selects the healthy facial side, and completes the occluded regions using symmetry-based UV mirroring.
   
@@ -71,7 +72,7 @@ Download AlbedoGAN modified weights from the following [[LINK](https://drive.goo
     python img_2_tex.py
    ```
     
--### **Reconstruct 3D Faces from 2D Images**
+- ### **Reconstruct 3D Faces from 2D Images**
   
   This script reconstructs 3D facial geometry  and the completed UV texture maps.
   
@@ -79,20 +80,21 @@ Download AlbedoGAN modified weights from the following [[LINK](https://drive.goo
     python demos/demo_reconstruct.py
    ```
 
--### **Generate multi-pose videos**
+- ### **Generate multi-pose videos**
   
   This script takes reconstructed OBJ meshes and generates smooth yaw-rotation videos by estimating the frontal orientation using facial symmetry.
   
    ```
     python video.py
    ```
--### **Generate multi-pose images and Rotation GIF**
+- ### **Generate multi-pose images and Rotation GIF**
   
-   This script generate frontal/side renders and rotation animations from reconstructed meshes.
-    ```
-python face_view_renderer.py --mesh $input_mesh --out_dir $output_folder 
+ This script generate frontal/side renders and rotation animations from reconstructed meshes.
+   
+   ```
+python face_view_renderer.py --mesh $input_mesh --out_dir $output_folder
 --n_frames (default: 30) --fps (default: 15) --side_yaw (default: 30.0) --delta_yaw (default: 45.0)
-    ```
+   ```
     
 Optional arguments:
 
