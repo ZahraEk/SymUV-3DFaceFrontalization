@@ -32,7 +32,7 @@ Instead of hallucinating missing regions blindly, the method:
 
 The easiest way to try the UV Symmetry GAN pipeline is through the provided Google Colab notebook, which runs the full UV completion and 3D reconstruction process end-to-end.
 
-[![UV Symmetry GAN pipeline](https://github.com/user-attachments/assets/15e7944b-4493-4daa-8869-c7fb25182397)](https://github.com/ZahraEk/Towards-Realistic-Generative-3D-Face-Models/blob/main/Towards_Realistic_Generative_3D_Face_Models_.ipynb)
+[![UV Symmetry GAN pipeline](https://github.com/user-attachments/assets/15e7944b-4493-4daa-8869-c7fb25182397)](https://colab.research.google.com/github/ZahraEk/Towards-Realistic-Generative-3D-Face-Models/blob/main/Towards_Realistic_Generative_3D_Face_Models_.ipynb)
 
 The notebook walks through:
 
@@ -48,7 +48,11 @@ No local setup is required beyond a Google account.
 ## Inference
 
 Conda environment: Refer environment.yml
-
+    ```
+conda env create -f environment.yml
+conda activate new_torchenv
+    ```
+**Pre-trained Models**
 Download pre-trained models and put in the respective folders. 
 
 Follow [[MICA](https://github.com/Zielon/MICA)] to download insightface and MICA pre-trained models. Put the weights in 'insightface' and 'data/mica_pretrained' folders, respectively.
@@ -56,22 +60,25 @@ Follow [[DECA](https://github.com/yfeng95/DECA)] to download DECA pre-trained we
 
 Download AlbedoGAN modified weights from the following [[LINK](https://drive.google.com/drive/folders/1nJw8rUBTLcyhvCMTDohE_KcKKtFI6Orm?usp=sharing)]. Put these modified ArcFace backbone and DECA weights to generate better reconstruction results.
 
-- Generate Random 3D Faces (mesh and texture)
+- UV Texture Completion and Correction 
+  This script extracts UV textures using DECA, estimates head pose, automatically selects the healthy facial side, and completes the occluded regions using symmetry-based UV mirroring.
     ```
-    python demos/demo_generate.py
+    python img_2_tex.py
     ```
     
 - Reconstruct 3D Faces from 2D Images
+  This script reconstructs 3D facial geometry  and the completed UV texture maps..
     ```
     python demos/demo_reconstruct.py
     ```
 
 - Generate multi-pose videos
+  This script takes reconstructed OBJ meshes and generates smooth yaw-rotation videos by estimating the frontal orientation using facial symmetry.
     ```
     python video.py
     ```
 
-## Training code will be released at the earliest convenience. 
+## Training code  
 
 ## Acknowledgements
 
