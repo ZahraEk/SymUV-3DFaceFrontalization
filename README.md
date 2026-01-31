@@ -48,11 +48,15 @@ No local setup is required beyond a Google account.
 ## Inference
 
 Conda environment: Refer environment.yml
+
     ```
 conda env create -f environment.yml
+
 conda activate new_torchenv
     ```
+    
 **Pre-trained Models**
+
 Download pre-trained models and put in the respective folders. 
 
 Follow [[MICA](https://github.com/Zielon/MICA)] to download insightface and MICA pre-trained models. Put the weights in 'insightface' and 'data/mica_pretrained' folders, respectively.
@@ -60,20 +64,26 @@ Follow [[DECA](https://github.com/yfeng95/DECA)] to download DECA pre-trained we
 
 Download AlbedoGAN modified weights from the following [[LINK](https://drive.google.com/drive/folders/1nJw8rUBTLcyhvCMTDohE_KcKKtFI6Orm?usp=sharing)]. Put these modified ArcFace backbone and DECA weights to generate better reconstruction results.
 
-- UV Texture Completion and Correction 
+- **UV Texture Completion and Correction**
+  
   This script extracts UV textures using DECA, estimates head pose, automatically selects the healthy facial side, and completes the occluded regions using symmetry-based UV mirroring.
+  
     ```
     python img_2_tex.py
     ```
     
-- Reconstruct 3D Faces from 2D Images
-  This script reconstructs 3D facial geometry  and the completed UV texture maps..
+- **Reconstruct 3D Faces from 2D Images**
+  
+  This script reconstructs 3D facial geometry  and the completed UV texture maps.
+  
     ```
     python demos/demo_reconstruct.py
     ```
 
-- Generate multi-pose videos
+- **Generate multi-pose videos**
+  
   This script takes reconstructed OBJ meshes and generates smooth yaw-rotation videos by estimating the frontal orientation using facial symmetry.
+  
     ```
     python video.py
     ```
