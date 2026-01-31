@@ -2,8 +2,7 @@
 This repository presents a **research-oriented fork** of the official implementation of:
 
 [**Towards Realistic Generative 3D Face Models (WACV 2024)**](https://github.com/aashishrai3799/Towards-Realistic-Generative-3D-Face-Models/?tab=readme-ov-file)
-
-Aashish Rai et al., Carnegie Mellon University & Meta Reality Labs.
+, Aashish Rai et al., Carnegie Mellon University & Meta Reality Labs.
 
 The primary goal of this fork is to investigate a self-supervised UV texture completion framework for generative 3D face modeling under extreme pose variations, self-occlusion, and large missing-texture regions.
 
@@ -89,23 +88,22 @@ Download AlbedoGAN modified weights from the following [[LINK](https://drive.goo
    ```
 - ### **Generate multi-pose images and Rotation GIF**
   
- This script generate frontal/side renders and rotation animations from reconstructed meshes.
+  This script generate frontal/side renders and rotation animations from reconstructed meshes.
    
    ```
-python face_view_renderer.py --mesh $input_mesh --out_dir $output_folder
---n_frames (default: 30) --fps (default: 15) --side_yaw (default: 30.0) --delta_yaw (default: 45.0)
+  python face_view_renderer.py --mesh $input_mesh --out_dir $output_folder
    ```
     
 Optional arguments:
 
-`--n_frames` : number of frames in the rotation sequence
+`--n_frames` : number of frames in the rotation sequence (default: 30)
 
-`--fps` : output video frame rate
+`--fps` : output video frame rate (default: 15)
 
-`--side_view` : yaw offset for left/right profile rendering
+`--side_view` : yaw offset for left/right profile rendering (default: 30.0)
 
-`--delta_yaw` : total yaw rotation range  
-    
+`--delta_yaw` : total yaw rotation range (default: 45.0)
+ 
 ## Training code  
 
 ## Acknowledgements
