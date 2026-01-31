@@ -1,12 +1,12 @@
 # Towards Realistic Generative 3D Face Models — UV Texture Completion via Symmetry-Guided GAN
 This repository presents a **research-oriented fork** of the official implementation of:
 
-**Towards Realistic Generative 3D Face Models (WACV 2024)**
+![**Towards Realistic Generative 3D Face Models (WACV 2024)**](https://github.com/aashishrai3799/Towards-Realistic-Generative-3D-Face-Models/?tab=readme-ov-file)
 Aashish Rai et al., Carnegie Mellon University & Meta Reality Labs.
 
 The primary goal of this fork is to investigate a self-supervised UV texture completion framework for generative 3D face modeling under extreme pose variations, self-occlusion, and large missing-texture regions.
 
-## 🔍 Overview
+## Overview
 
 Reconstructing complete and realistic facial UV textures from a **single in-the-wild image** remains a challenging problem due to extreme pose variations, self-occlusion, and the absence of ground-truth UV supervision.
 
@@ -14,7 +14,7 @@ While the original work introduces a StyleGAN2-based framework for high-quality 
 
 This repository introduces **UV Symmetry GAN**, an **end-to-end self-supervised framework** for **UV texture correction and completion** from a single image, **without requiring complete UV maps, multi-view data, or 3D scans**.
 
-## 🧠 Key Idea
+## Key Idea
 
 The core idea is to exploit the **intrinsic bilateral symmetry of human faces** as a source of **implicit supervision**.
 
@@ -28,7 +28,7 @@ Instead of hallucinating missing regions blindly, the method:
 
 ![](supp_image.png)
 
-## 🚀 Quick Start (Google Colab)
+## Quick Start (Google Colab)
 
 The easiest way to try the UV Symmetry GAN pipeline is through the provided Google Colab notebook, which runs the full UV completion and 3D reconstruction process end-to-end.
 
@@ -54,7 +54,7 @@ conda env create -f environment.yml
 conda activate new_torchenv
    ```
     
-**Pre-trained Models**
+### **Pre-trained Models**
 
 Download pre-trained models and put in the respective folders. 
 
@@ -63,7 +63,7 @@ Follow [[DECA](https://github.com/yfeng95/DECA)] to download DECA pre-trained we
 
 Download AlbedoGAN modified weights from the following [[LINK](https://drive.google.com/drive/folders/1nJw8rUBTLcyhvCMTDohE_KcKKtFI6Orm?usp=sharing)]. Put these modified ArcFace backbone and DECA weights to generate better reconstruction results.
 
-- **UV Texture Completion and Correction**
+-### **UV Texture Completion and Correction**
   
   This script extracts UV textures using DECA, estimates head pose, automatically selects the healthy facial side, and completes the occluded regions using symmetry-based UV mirroring.
   
@@ -71,7 +71,7 @@ Download AlbedoGAN modified weights from the following [[LINK](https://drive.goo
     python img_2_tex.py
     ```
     
-- **Reconstruct 3D Faces from 2D Images**
+-### **Reconstruct 3D Faces from 2D Images**
   
   This script reconstructs 3D facial geometry  and the completed UV texture maps.
   
@@ -79,14 +79,30 @@ Download AlbedoGAN modified weights from the following [[LINK](https://drive.goo
     python demos/demo_reconstruct.py
     ```
 
-- **Generate multi-pose videos**
+-### **Generate multi-pose videos**
   
   This script takes reconstructed OBJ meshes and generates smooth yaw-rotation videos by estimating the frontal orientation using facial symmetry.
   
     ```
     python video.py
     ```
+-### **Generate multi-pose images and Rotation GIF**
+  
+   This script generate frontal/side renders and rotation animations from reconstructed meshes.
+    ```
+python generate_views.py
+    ```
+    
+Optional arguments:
 
+`--n_frames` : number of frames in the rotation sequence
+
+`--fps` : output video frame rate
+
+`--side_view` : yaw offset for left/right profile rendering
+
+`--delta_yaw` : total yaw rotation range  
+    
 ## Training code  
 
 ## Acknowledgements
