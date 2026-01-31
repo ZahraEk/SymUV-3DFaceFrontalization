@@ -1,7 +1,7 @@
 # Towards Realistic Generative 3D Face Models — UV Texture Completion via Symmetry-Guided GAN
 This repository presents a **research-oriented fork** of the official implementation of:
 
-![**Towards Realistic Generative 3D Face Models (WACV 2024)**](https://github.com/aashishrai3799/Towards-Realistic-Generative-3D-Face-Models/?tab=readme-ov-file)
+[**Towards Realistic Generative 3D Face Models (WACV 2024)**](https://github.com/aashishrai3799/Towards-Realistic-Generative-3D-Face-Models/?tab=readme-ov-file)
 Aashish Rai et al., Carnegie Mellon University & Meta Reality Labs.
 
 The primary goal of this fork is to investigate a self-supervised UV texture completion framework for generative 3D face modeling under extreme pose variations, self-occlusion, and large missing-texture regions.
@@ -67,30 +67,31 @@ Download AlbedoGAN modified weights from the following [[LINK](https://drive.goo
   
   This script extracts UV textures using DECA, estimates head pose, automatically selects the healthy facial side, and completes the occluded regions using symmetry-based UV mirroring.
   
-    ```
+   ```
     python img_2_tex.py
-    ```
+   ```
     
 -### **Reconstruct 3D Faces from 2D Images**
   
   This script reconstructs 3D facial geometry  and the completed UV texture maps.
   
-    ```
+   ```
     python demos/demo_reconstruct.py
-    ```
+   ```
 
 -### **Generate multi-pose videos**
   
   This script takes reconstructed OBJ meshes and generates smooth yaw-rotation videos by estimating the frontal orientation using facial symmetry.
   
-    ```
+   ```
     python video.py
-    ```
+   ```
 -### **Generate multi-pose images and Rotation GIF**
   
    This script generate frontal/side renders and rotation animations from reconstructed meshes.
     ```
-python generate_views.py
+python face_view_renderer.py --mesh $input_mesh --out_dir $output_folder 
+--n_frames (default: 30) --fps (default: 15) --side_yaw (default: 30.0) --delta_yaw (default: 45.0)
     ```
     
 Optional arguments:
