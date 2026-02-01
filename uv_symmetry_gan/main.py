@@ -28,7 +28,7 @@ from img_2_tex import mesh_angle, tex_correction, apply_face_neck_correction
 # ArcFace ONNX model for identity preservation
 ONNX_MODEL_LOCAL = "arcfaceresnet100-int8.onnx"
 
-def train_single_uv(img_name, input_dir, out_dir="results", iters=500, warmup=150, uv_size=512):
+def train_single_uv(img_name, input_dir, out_dir="results", iters=500, warmup=50, uv_size=512):
     """
     Train a UV completion GAN using:
       - Explicit UV target (pose-corrected)
@@ -84,7 +84,7 @@ def train_single_uv(img_name, input_dir, out_dir="results", iters=500, warmup=15
     mid = W // 2
 
     # Damage mask inferred via symmetry difference
-    mask_z = compute_mask_z(uv_raw, healthy_side, mask_threshold=15)
+    mask_z = compute_mask_z(uv_raw, healthy_side, mask_threshold=5)
     mask_z = mask_z.to(face_mask.device) * face_mask
     #mask_z = add_seam_band(mask_z, band_width=80, falloff=20)
     mask_z = mask_z * face_mask
@@ -140,13 +140,13 @@ def train_single_uv(img_name, input_dir, out_dir="results", iters=500, warmup=15
     codedict['images'] = img_cropped
 
     # ================= Loss Weights =================
-    WEIGHT_ADV_UV = 0.005
+    WEIGHT_ADV_UV = 0.01
     WEIGHT_RENDER_ADV = 0.01       
     WEIGHT_RENDER_REC = 1.0
-    WEIGHT_RENDER_VGG = 0.2
-    WEIGHT_RENDER_ID = 0.05
-    WEIGHT_SYM = 2.0
-    WEIGHT_SEAM = 1.0
+    WEIGHT_RENDER_VGG = 0.4
+    WEIGHT_RENDER_ID = 0.08
+    WEIGHT_SYM = 1.0
+    WEIGHT_SEAM = 0.5
 
     # ================= Training Loop =================
     for i in range(iters):
