@@ -133,7 +133,7 @@ During training, raw UV textures extracted by DECA are treated as incomplete and
 
 The full training framework is illustrated in the following diagram:
 
-<p align="center"> <img src="./figures/uv_completion_framework.png" width="800"> </p>
+<p align="center"> <img src="./figures/uv_completion_framework.drawio.png" style = "width: 1000px; height: 400px;"> </p>
 
 This design enables stable self-supervised training under extreme pose variations and self-occlusion, while preserving facial identity and texture continuity.
 Training scripts and configuration details are provided for research and reproducibility purposes.
