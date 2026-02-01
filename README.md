@@ -1,8 +1,8 @@
 # Towards Realistic Generative 3D Face Models — UV Texture Completion via Symmetry-Guided GAN
 This repository presents a **research-oriented fork** of the official implementation of:
 
-[**Towards Realistic Generative 3D Face Models (WACV 2024)**](https://github.com/aashishrai3799/Towards-Realistic-Generative-3D-Face-Models/?tab=readme-ov-file)
-, Aashish Rai et al., Carnegie Mellon University & Meta Reality Labs.
+[**Towards Realistic Generative 3D Face Models (WACV 2024)**](https://github.com/aashishrai3799/Towards-Realistic-Generative-3D-Face-Models/?tab=readme-ov-file),  
+Aashish Rai et al., Carnegie Mellon University & Meta Reality Labs.
 
 The primary goal of this fork is to investigate a self-supervised UV texture completion framework for generative 3D face modeling under extreme pose variations, self-occlusion, and large missing-texture regions.
 
@@ -40,7 +40,7 @@ The notebook walks through:
 
 No local setup is required beyond a Google account.
 
-## Inference
+## Running Inference
 
 Conda environment: Refer environment.yml
  
@@ -159,6 +159,15 @@ Arguments:
 - `--warmup` : number of warm-up iterations before enabling adversarial losses
 
 - `--uv_size` : UV texture resolution
+
+### Training Outputs
+
+Training Outputs During training, the framework saves both intermediate and final results for analysis and debugging, including: 
+
+Completed UV texture maps, Symmetry masks and healthy/degraded splits, Intermediate UV refinement stages, Rendered images in image space Final textured 3D face meshes, Pose-normalized frontal renderings.
+
+All outputs are stored under the automatically created results directory: `<out_dir>_train_uv_results/`,  
+where `<out_dir>` is derived from the input image name unless explicitly specified via the command line.
 
 ## Acknowledgements
 
