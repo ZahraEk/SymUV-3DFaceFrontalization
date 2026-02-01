@@ -23,11 +23,6 @@ Instead of hallucinating missing regions blindly, the method:
 - transfers reliable texture information from the healthy side to the degraded side,
 - and refines the UV map through adversarial and perceptual supervision.
 
-
-![](figure_1.png)
-
-![](supp_image.png)
-
 ## Quick Start (Google Colab)
 
 The easiest way to try the UV Symmetry GAN pipeline is through the provided Google Colab notebook, which runs the full UV completion and 3D reconstruction process end-to-end.
@@ -70,7 +65,8 @@ Download AlbedoGAN modified weights from the following [[LINK](https://drive.goo
    ```
     python img_2_tex.py
    ```
-    
+   <img src="./figures/compelete_texture.png" style = "width: 500px; height: 250px;"/>
+
 - ### **Reconstruct 3D Faces from 2D Images**
   
   This script reconstructs 3D facial geometry  and the completed UV texture maps.
@@ -78,6 +74,7 @@ Download AlbedoGAN modified weights from the following [[LINK](https://drive.goo
    ```
     python demos/demo_reconstruct.py
    ```
+   ![](figures/058_01_01_080_16_crop_128_vis.jpg)
 
 - ### **Generate multi-pose videos**
   
@@ -93,7 +90,8 @@ Download AlbedoGAN modified weights from the following [[LINK](https://drive.goo
    ```
   python face_view_renderer.py --mesh $input_mesh --out_dir $output_folder
    ```
-    
+  <img src="./figures/render_views.png" style = "width: 600px; height: 200px;"/>
+   
 Optional arguments:
 
 `--n_frames` : number of frames in the rotation sequence (default: 30)
