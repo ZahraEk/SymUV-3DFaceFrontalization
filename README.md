@@ -49,7 +49,7 @@ conda env create -f environment.yml
 conda activate new_torchenv
    ```
     
-### **Pre-trained Models**
+### Pre-trained Models
 
 Download pre-trained models and put in the respective folders. 
 
@@ -67,7 +67,7 @@ Download AlbedoGAN modified weights from the following [[LINK](https://drive.goo
    ```
    <img src="./figures/compelete_texture.png" style = "width: 500px; height: 250px;"/>
 
-- ### **Reconstruct 3D Faces from 2D Images**
+- ### Reconstruct 3D Faces from 2D Images
   
   This script reconstructs 3D facial geometry  and the completed UV texture maps.
   
@@ -76,14 +76,14 @@ Download AlbedoGAN modified weights from the following [[LINK](https://drive.goo
    ```
    ![](figures/058_01_01_080_16_crop_128_vis.jpg)
 
-- ### **Generate multi-pose videos**
+- ### Generate multi-pose videos
   
   This script takes reconstructed OBJ meshes and generates smooth yaw-rotation videos by estimating the frontal orientation using facial symmetry.
   
    ```
     python video.py
    ```
-- ### **Generate multi-pose images and Rotation GIF**
+- ### Generate multi-pose images and Rotation GIF
   
   This script generate frontal/side renders and rotation animations from reconstructed meshes.
    
@@ -92,17 +92,73 @@ Download AlbedoGAN modified weights from the following [[LINK](https://drive.goo
    ```
   <img src="./figures/render_views.png" style = "width: 600px; height: 200px;"/>
    
-Optional arguments:
+  Optional arguments:
 
-`--n_frames` : number of frames in the rotation sequence (default: 30)
+  - `--n_frames` : number of frames in the rotation sequence (default: 30)
 
-`--fps` : output video frame rate (default: 15)
+  - `--fps` : output video frame rate (default: 15)
 
-`--side_view` : yaw offset for left/right profile rendering (default: 30.0)
+  - `--side_view` : yaw offset for left/right profile rendering (default: 30.0)
 
-`--delta_yaw` : total yaw rotation range (default: 45.0)
+  - `--delta_yaw` : total yaw rotation range (default: 45.0)
  
-## Training code  
+## Training code — UV Symmetry GAN 
+
+We provide a self-supervised training pipeline for UV texture correction and completion from a single image, without requiring ground-truth UV textures or multi-view supervision.
+
+During training, raw UV textures extracted by DECA are treated as incomplete and degraded observations. The network learns to correct these UV maps by exploiting facial symmetry priors, pose-aware masking, and dual-space adversarial supervision.
+
+### Training Pipeline Overview
+
+- **DECA Reconstruction**:
+  
+  Raw UV textures and 3D facial geometry are extracted from input images using DECA after face detection and alignment.
+
+- **Pose Estimation & Healthy Side Selection**:
+  
+  Head pose is estimated from reconstructed mesh vertices to automatically identify the healthy (less occluded) facial half.
+
+- **Symmetry-Guided UV Completion GAN**:
+  
+  The generator is conditioned on the concatenation of the raw UV texture, facial mask, and horizontally flipped UV map to predict corrected UV regions.
+  A dual UV-space discriminator (global and seam-aware PatchGANs) enforces realistic texture synthesis.
+
+- **Render-Space Supervision via DECA**:
+  
+  The completed UV texture is rendered back into image space through DECA, enabling image-space adversarial, perceptual (VGG), and identity-preserving (ArcFace) supervision.
+
+- **Seam & Consistency Refinement**:
+  
+  Additional regularization terms enforce smooth transitions along the UV midline and symmetry consistency between facial halves, improving texture continuity and visual coherence.
+
+The full training framework is illustrated in the following diagram:
+
+<p align="center"> <img src="./figures/uv_completion_framework.png" width="800"> </p>
+
+This design enables stable self-supervised training under extreme pose variations and self-occlusion, while preserving facial identity and texture continuity.
+Training scripts and configuration details are provided for research and reproducibility purposes.
+
+### Running Training
+To train the UV Symmetry GAN on a single image, run:
+   ```
+python uv_symmetry_gan/main.py \
+  --input_dir PATH_TO_IMAGES \
+  --img IMAGE_NAME \
+  --iters NUM_ITERS \
+  --warmup WARMUP_ITERS \
+  --uv_size UV_RESOLUTION
+   ```
+Arguments:
+
+- `--input_dir` : directory containing training images
+
+- `--img` : name of the input image used for training or debugging
+
+- `--iters` : total number of training iterations
+
+- `--warmup` : number of warm-up iterations before enabling adversarial losses
+
+- `--uv_size` : UV texture resolution
 
 ## Acknowledgements
 
