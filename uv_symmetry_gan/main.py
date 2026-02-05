@@ -140,7 +140,7 @@ def train_single_uv(img_name, input_dir, out_dir="results", iters=500, warmup=50
     codedict['images'] = img_cropped
 
     # ================= Loss Weights =================
-    WEIGHT_ADV_UV = 0.01
+    WEIGHT_ADV_UV = 0.008
     WEIGHT_RENDER_ADV = 0.01       
     WEIGHT_RENDER_REC = 1.0
     WEIGHT_RENDER_VGG = 0.4
