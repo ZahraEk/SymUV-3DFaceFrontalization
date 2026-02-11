@@ -133,7 +133,7 @@ During training, raw UV textures extracted by DECA are treated as incomplete and
 
 The full training framework is illustrated in the following diagram:
 
-<p align="center"> <img src="./figures/uv_completion_framework.drawio.png" style = "width: 1000px; height: 400px;"> </p>
+<p align="center"> <img src="./figures/uv_completion_framework_new.drawio.png" style = "width: 1000px; height: 400px;"> </p>
 
 This design enables stable self-supervised training under extreme pose variations and self-occlusion, while preserving facial identity and texture continuity.
 Training scripts and configuration details are provided for research and reproducibility purposes.
@@ -165,6 +165,14 @@ Arguments:
 Training Outputs During training, the framework saves both intermediate and final results for analysis and debugging, including: 
 
 Completed UV texture maps, Symmetry masks and healthy/degraded splits, Intermediate UV refinement stages, Rendered images in image space Final textured 3D face meshes, Pose-normalized frontal renderings.
+
+Input Generator:
+<p align="center"> <img src="./figures/058_input_generator.png" style = "width: 600px; height: 200px;"> </p>
+Train UV:
+<p align="center"> <img src="./figures/train_058_3.png" style = "width: 600px; height: 200px;"> </p>
+Rendered views:
+<p align="center"> <img src="./figures/views_058.png" style = "width: 600px; height: 280px;"> </p>
+
 
 All outputs are stored under the automatically created results directory: `<out_dir>_train_uv_results/`,  
 where `<out_dir>` is derived from the input image name unless explicitly specified via the command line.
