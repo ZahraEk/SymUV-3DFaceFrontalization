@@ -169,15 +169,16 @@ Training Outputs During training, the framework saves both intermediate and fina
 Completed UV texture maps, Symmetry masks and healthy/degraded splits, Intermediate UV refinement stages, Rendered images in image space Final textured 3D face meshes, Pose-normalized frontal renderings.
 
 #### Input to Generator:
-<img src="./figures/058_input_generator.png" width="50%"/>
+<img src="./figures/058_input_generator.png" width="55%"/>
 
 #### UV Refinement During Training:
-<img src="./figures/train_058_3.png" width="50%"/>
+<img src="./figures/train_058.png" width="70%"/>
 
-#### Rendered Views
-<p align="center">
-  <img src="./figures/views_058.png" width="50%"/">
-</p>
+#### UV Refinement:
+<img src="./figures/out_058_1.png" width="50%"/>
+
+#### Rendered Views:
+<img src="./figures/058_left.png" width="20%"/><img src="./figures/058_frontal.png" width="20%"/><img src="./figures/058_right.png" width="20%"/>
 
 All outputs are stored under the automatically created results directory: `<out_dir>_train_uv_results/`,  
 where `<out_dir>` is derived from the input image name unless explicitly specified via the command line.
