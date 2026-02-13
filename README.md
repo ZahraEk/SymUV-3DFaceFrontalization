@@ -65,7 +65,7 @@ Download AlbedoGAN modified weights from the following [[LINK](https://drive.goo
    ```
     python img_2_tex.py
    ```
-   <img src="./figures/compelete_texture.png" style = "width: 500px; height: 250px;"/>
+   <img src="./figures/compelete_texture.png"  width="45%"/>
 
 - ### Reconstruct 3D Faces from 2D Images
   
@@ -83,6 +83,8 @@ Download AlbedoGAN modified weights from the following [[LINK](https://drive.goo
    ```
     python video.py
    ```
+   <img src="./figures/rotation.gif" width="30%"/>
+
 - ### Generate multi-pose images and Rotation GIF
   
   This script generate frontal/side renders and rotation animations from reconstructed meshes.
@@ -90,7 +92,7 @@ Download AlbedoGAN modified weights from the following [[LINK](https://drive.goo
    ```
   python face_view_renderer.py --mesh $input_mesh --out_dir $output_folder
    ```
-  <img src="./figures/render_views.png" style = "width: 600px; height: 200px;"/>
+  <img src="./figures/render_views.png" width="60%"/>
    
   Optional arguments:
 
@@ -133,7 +135,7 @@ During training, raw UV textures extracted by DECA are treated as incomplete and
 
 The full training framework is illustrated in the following diagram:
 
-<p align="center"> <img src="./figures/uv_completion_framework_new.drawio.png" style = "width: 1000px; height: 400px;"> </p>
+<p align="center"> <img src="./figures/uv_completion_framework_new.drawio.png"  width="90%"/> </p>
 
 This design enables stable self-supervised training under extreme pose variations and self-occlusion, while preserving facial identity and texture continuity.
 Training scripts and configuration details are provided for research and reproducibility purposes.
@@ -166,13 +168,16 @@ Training Outputs During training, the framework saves both intermediate and fina
 
 Completed UV texture maps, Symmetry masks and healthy/degraded splits, Intermediate UV refinement stages, Rendered images in image space Final textured 3D face meshes, Pose-normalized frontal renderings.
 
-Input Generator:
-<p align="center"> <img src="./figures/058_input_generator.png" style = "width: 600px; height: 200px;"> </p>
-Train UV:
-<p align="center"> <img src="./figures/train_058_3.png" style = "width: 600px; height: 200px;"> </p>
-Rendered views:
-<p align="center"> <img src="./figures/views_058.png" style = "width: 600px; height: 280px;"> </p>
+#### Input to Generator:
+<img src="./figures/058_input_generator.png" width="50%"/>
 
+#### UV Refinement During Training:
+<img src="./figures/train_058_3.png" width="50%"/>
+
+#### Rendered Views
+<p align="center">
+  <img src="./figures/views_058.png" width="50%"/">
+</p>
 
 All outputs are stored under the automatically created results directory: `<out_dir>_train_uv_results/`,  
 where `<out_dir>` is derived from the input image name unless explicitly specified via the command line.
