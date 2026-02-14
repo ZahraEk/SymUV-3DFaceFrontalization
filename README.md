@@ -14,6 +14,8 @@ While the original work introduces a StyleGAN2-based framework for high-quality 
 
 This repository introduces **UV Symmetry GAN**, an **end-to-end self-supervised framework** for **UV texture correction and completion** from a single image, **without requiring complete UV maps, multi-view data, or 3D scans**.
 
+<p align="center"> <img src="./figures/progress_058.gif" width="25%"/> </p>
+
 ## Key Idea
 
 The core idea is to exploit the **intrinsic bilateral symmetry of human faces** as a source of **implicit supervision**.
@@ -164,15 +166,15 @@ Arguments:
 
 ### Training Outputs
 
-Training Outputs During training, the framework saves both intermediate and final results for analysis and debugging, including: 
+During training, the framework saves intermediate and final results for analysis and debugging, including: 
 
 Completed UV texture maps, Symmetry masks and healthy/degraded splits, Intermediate UV refinement stages, Rendered images in image space Final textured 3D face meshes, Pose-normalized frontal renderings.
 
 #### Input to Generator:
-<img src="./figures/058_input_generator.png" width="55%"/>
+<img src="./figures/input_to_generator_058.png" width="55%"/>
 
 #### Final UV Completion and Frontal Rendering:
-<img src="./figures/out_058_1.png" width="50%"/>
+<img src="./figures/Final_Completion_058.png" width="50%"/>
 
 #### Multi-View Rendering:
 <img src="./figures/058_left.png" width="20%"/><img src="./figures/058_frontal.png" width="20%"/><img src="./figures/058_right.png" width="20%"/>
