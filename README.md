@@ -1,4 +1,4 @@
-# Towards Realistic Generative 3D Face Models — UV Texture Completion via Symmetry-Guided GAN
+# SymUV: Self-Supervised UV Texture Completion for Single-Image 3D Face Frontalization via Facial Symmetry
 This repository presents a **research-oriented fork** of the official implementation of:
 
 [**Towards Realistic Generative 3D Face Models (WACV 2024)**](https://github.com/aashishrai3799/Towards-Realistic-Generative-3D-Face-Models/?tab=readme-ov-file),  
