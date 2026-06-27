@@ -29,7 +29,7 @@ Instead of hallucinating missing regions blindly, the method:
 
 The easiest way to try the UV Symmetry GAN pipeline is through the provided Google Colab notebook, which runs the full UV completion and 3D reconstruction process end-to-end.
 
-[![UV Symmetry GAN pipeline](https://github.com/user-attachments/assets/15e7944b-4493-4daa-8869-c7fb25182397)](https://colab.research.google.com/github/ZahraEk/Towards-Realistic-Generative-3D-Face-Models/blob/main/Towards_Realistic_Generative_3D_Face_Models_.ipynb)
+[![UV Symmetry GAN pipeline](https://github.com/user-attachments/assets/15e7944b-4493-4daa-8869-c7fb25182397)](https://colab.research.google.com/github/ZahraEk/SymUV-3DFaceFrontalization/blob/main/SymUV-3DFaceFrontalization.ipynb)
 
 The notebook walks through:
 
